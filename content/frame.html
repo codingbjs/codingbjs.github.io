@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VMS 명세 - 프레임 구조</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+  <h1>프레임 구조 및 패킷 예시</h1>
+  <section id="frame-structure">
+    <h2>a. 전체 프레임 구조</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Field</th>
+        <th>Length</th>
+        <th>Description</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><strong>SENDER IP</strong></td>
+        <td>16 byte</td>
+        <td>송신지 IPv4/IPv6 주소<br>Sender IPv4/IPv6 address</td>
+      </tr>
+      <tr>
+        <td><strong>DESTINATION IP</strong></td>
+        <td>16 byte</td>
+        <td>목적지 IPv4/IPv6 주소<br>Destination IPv4/IPv6 address</td>
+      </tr>
+      <tr>
+        <td><strong>CONTROLLER KIND</strong></td>
+        <td>2 byte</td>
+        <td>제어기 종류 코드<br>Controller type code</td>
+      </tr>
+      <tr>
+        <td><strong>CONTROLLER STATION NUMBER</strong></td>
+        <td>4 byte</td>
+        <td>상위 2 byte: 노선번호 / 하위 2 byte: 제어기 일련번호<br>2 bytes: route number / 2 bytes: controller serial number</td>
+      </tr>
+      <tr>
+        <td><strong>TOTAL LENGTH</strong></td>
+        <td>4 byte</td>
+        <td>OPCODE(1 byte) + DATA FIELD 길이의 합<br>Sum of OPCODE and DATA FIELD length</td>
+      </tr>
+      <tr>
+        <td><strong>OPCODE</strong></td>
+        <td>1 byte</td>
+        <td>요청/응답 명령어 코드<br>command code</td>
+      </tr>
+      <tr>
+        <td><strong>DATA FIELD</strong></td>
+        <td>N byte</td>
+        <td>OPCODE 별 가변 데이터<br>Variable data</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="packet-example">
+    <h2>b. 인증 ID 요청 (0xFF) 패킷 예시</h2>
+    <ul>
+      <li><strong>SENDER IP/DESTINATION IP:</strong> 송신지 <code>192.168.0.245</code>, 목적지 <code>192.168.0.10</code><br>각 옥텟을 3자리로 패딩(예: 192 → 192, 10 → 010)하고 나머지 바이트는 '<code>-</code>' (0x2D)로 채워 총 16바이트</li>
+      <li><strong>CONTROLLER KIND:</strong> ASCII "<code>MS</code>" (VMS 객체형)</li>
+      <li><strong>CONTROLLER STATION NUMBER:</strong> 예시로 노선번호 <code>0x000A</code>, 제어기 번호 <code>0x0001</code> 사용</li>
+      <li><strong>TOTAL LENGTH:</strong> OPCODE(1) + DATA(0) = 1 → <code>0x00000001</code></li>
+      <li><strong>OPCODE:</strong> 인증 ID 요청 = <code>0xFF</code></li>
+      <li><strong>DATA FIELD:</strong> 없음</li>
+    </ul>
+
+    <h3>패킷 예시 테이블</h3>
+    <table>
+      <thead>
+      <tr>
+        <th>SENDER IP</th>
+        <th>DESTINATION IP</th>
+        <th>CONTROLLER KIND</th>
+        <th>CONTROLLER STATION NUMBER</th>
+        <th>TOTAL LENGTH</th>
+        <th>OPCODE</th>
+        <th>DATA FIELD</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>192.168.000.245-</td>
+        <td>192.168.000.010-</td>
+        <td>MS</td>
+        <td>A, 1</td>
+        <td>1</td>
+        <td>FF</td>
+        <td>값 없음</td>
+      </tr>
+      <tr>
+        <td><code>31 39 32 2E...35 2D</code></td>
+        <td><code>31 39 32 2E...30 2D</code></td>
+        <td><code>4D 53</code></td>
+        <td><code>00 0A 00 01</code></td>
+        <td><code>00 00 00 01</code></td>
+        <td><code>FF</code></td>
+        <td><code>-</code></td>
+      </tr>
+      </tbody>
+    </table>
+
+    <h3>전체 패킷 Hex 데이터</h3>
+    <pre><code>31 39 32 2E 31 36 38 2E 30 30 30 2E 32 34 35 2D 31 39 32 2E 31 36 38 2E 30 30 30 2E 30 31 30 2D 4D 53 00 0A 00 01 00 00 00 01 FF</code></pre>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="../script/script.js"></script>
+</body>
+</html>

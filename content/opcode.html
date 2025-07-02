@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>VMS 명세 - OPCODE</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+  <h1>OPCODE 목록</h1>
+  <section id="opcode-list">
+    <table>
+      <thead>
+      <tr>
+        <th>구분</th>
+        <th>OP CODE</th>
+        <th>명칭</th>
+        <th>센터</th>
+        <th>설명</th>
+        <th>방향</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td rowspan="2">1</td><td rowspan="2">0xFF</td><td rowspan="2">장비 구분</td>
+        <td>송신</td><td>DEVICE ID 요청</td><td rowspan="2">SERVER↔VMS</td>
+      </tr>
+      <tr><td>수신</td><td>DEVICE ID 응답</td></tr>
+      <tr>
+        <td rowspan="2">2</td><td rowspan="2">0x01</td><td rowspan="2">폼 데이터 표출</td>
+        <td>송신</td><td>표출할 폼 데이터 송신</td><td rowspan="2">SERVER↔VMS</td>
+      </tr>
+      <tr><td>수신</td><td>수신 여부 응답(ACK/NAK)</td></tr>
+      <tr>
+        <td rowspan="2">22</td><td rowspan="2">0x15</td><td rowspan="2">UpLoad Font</td>
+        <td>송신</td><td>폰트설정 정보 올리기</td><td rowspan="2">SERVER↔VMS</td>
+      </tr>
+      <tr><td>수신</td><td>폰트설정 정보 응답</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="../script/script.js"></script>
+</body>
+</html>
