@@ -7,7 +7,7 @@ console.log("VMS Interface Document is loaded.");
 // DOM이 완전히 로드되면 실행
 document.addEventListener("DOMContentLoaded", function() {
     // nav.html 파일을 가져옴
-    fetch("/nav.html")
+    fetch("/github.io/nav.html")
         .then(response => {
             if (!response.ok) {
                 throw new Error("Network response was not ok");
