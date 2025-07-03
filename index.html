@@ -13,20 +13,39 @@
 <div id="navbar-placeholder"></div>
 
 <main class="container">
-  <h1>VMS 인터페이스 설계서</h1>
+  <h1>VMS 통신 프로토콜 명세</h1>
   <section id="spec">
-    <h2>통신 규격 및 절차</h2>
-    <h3>a. 통신 규격 및 전송 방식</h3>
+    <h2>1. 통신 규격 및 전송 방식</h2>
     <ul>
-      <li><strong>프로토콜 계층:</strong> <code>TCP/IP</code> 기반 소켓 통신을 사용하며, 포트 번호는 기본적으로 <code>30200</code>번을 할당합니다.</li>
-      <li><strong>바이트 오더:</strong> 다중 바이트 필드는 모두 네트워크 바이트 오더(<code>Big-Endian</code>)를 따릅니다.</li>
+      <li><strong>프로토콜 계층:</strong> <code>TCP/IP</code> 기반 소켓 통신을 사용하며, 포트 번호는 기본적으로 <code>30200</code>번을 할당합니다(2009년
+        IANA 기준 미등록 포트 사용).
+      </li>
+      <li><strong>바이트 오더:</strong> 다중 바이트 필드(예: <code>Total Length</code>, 좌표, ID 등)는 모두 네트워크 바이트
+        오더(<code>Big-Endian</code>)를 따릅니다.
+      </li>
     </ul>
-    <h3>b. 통신 절차 및 세션 관리</h3>
+
+    <h2>2. 통신 절차 및 세션 관리</h2>
+
+    <h3>a. 초기 연결</h3>
     <ul>
-      <li><strong>초기 연결:</strong> VMS 장비가 서버에 TCP 연결 요청 → 서버가 인증용 Device ID 요청(<code>0xFF</code>) → 장비가 ID 응답.</li>
-      <li><strong>상태 확인:</strong> 인증 후 서버는 1분 주기로 상태 요구(<code>0x05</code>)를 전송하여 장비 상태를 모니터링합니다.</li>
-      <li><strong>세션 유지:</strong> 5분간 요청이 없으면 장비가 유효성 확인(<code>0x12</code>)을 보내고, 응답 없으면 3회 재시도 후 재접속합니다.</li>
-      <li><strong>ACK/NAK 처리:</strong> 모든 요청에 대해 <code>ACK(0x06)</code> 또는 <code>NAK(0x15+오류코드)</code>로 응답합니다.</li>
+      <li>VMS 장비가 서버에 TCP 연결 요청 → 서버가 인증용 Device ID 요청(<code>OPCODE 0xFF</code>) 전송 → 장비가 ID 응답.</li>
+    </ul>
+
+    <h3>b. 상태 확인</h3>
+    <ul>
+      <li>인증 후 서버는 현재표출폼요청(<code>0x0B</code>) 및 VMS 상태요구(<code>0x05</code>)를 1분 주기로 전송하여 장비 상태를 모니터링합니다.</li>
+    </ul>
+
+    <h3>c. 세션 유효성 확인</h3>
+    <ul>
+      <li>5분간 서버 요청이 없으면 장비가 세션유효성 확인 요청(<code>0x12</code>)을 보내고, 응답이 없으면 최대 3회 재시도 후 연결 종료 및 30초 후 재접속 시도.</li>
+    </ul>
+
+    <h3>d. ACK/NAK 처리</h3>
+    <ul>
+      <li>모든 요청에 대해 장비 또는 서버는 데이터 필드에 <code>ACK(0x06)</code> 또는 <code>NAK(0x15 + 오류코드)</code>를 포함하여 응답합니다.</li>
+      <li>NAK 오류코드에는 “데이터 크기 불일치(<code>0x32</code>)”, “정의되지 않은 폼 데이터 요구(<code>0x35</code>)” 등 다양한 항목이 정의되어 있습니다.</li>
     </ul>
   </section>
 </main>
