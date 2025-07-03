@@ -87,6 +87,8 @@
       <td>수신</td>
       <td>수신 여부 응답(ACK/NAK)</td>
     </tr>
+
+
     <tr data-group="opcode-05">
       <td rowspan="2">6</td>
       <td rowspan="2">0x05</td>
@@ -100,66 +102,68 @@
       <td>상태 데이터 응답</td>
     </tr>
 
-    <tr>
+    <tr data-group="opcode-06">
       <td rowspan="2">7</td>
       <td rowspan="2">0x06</td>
-      <td rowspan="2">VMS 파라미터 요구</td>
+      <td rowspan="2"><a href="/content/class/0x06_vms_parameter_request.html">VMS 파라미터 요구</a></td>
       <td>송신</td>
       <td>VMS 로컬 상태 요구 송신</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-06">
       <td>수신</td>
       <td>로컬 상태 데이터 응답</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-07">
       <td rowspan="2">8</td>
       <td rowspan="2">0x07</td>
-      <td rowspan="2">전원 모듈 상태 요구</td>
+      <td rowspan="2"><a href="/content/class/0x07_power_module_status.html">전원 모듈 상태 요구</a></td>
       <td>송신</td>
       <td>전원 모듈 상태를 검사 결과를 요청한다</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-07">
       <td>수신</td>
       <td>전원 모듈 상태 데이터 응답</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-08">
       <td rowspan="2">9</td>
       <td rowspan="2">0x08</td>
-      <td rowspan="2">표출 모듈 상태 요구</td>
+      <td rowspan="2"><a href="/content/class/0x08_display_module_status.html">표출 모듈 상태 요구</a></td>
       <td>송신</td>
       <td>표출 모듈 상태를 검사 결과를 요청한다</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-08">
       <td>수신</td>
       <td>표출 모듈 상태 데이터 응답</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-09">
       <td rowspan="2">10</td>
       <td rowspan="2">0x09</td>
-      <td rowspan="2">VMS 정지영상 요구</td>
+      <td rowspan="2"><a href="/content/class/0x09_vms_still_image.html">VMS 정지영상 요구</a></td>
       <td>송신</td>
       <td>현재 표출되는 이미지 송신 요구</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-09">
       <td>수신</td>
       <td>현재 표출되는 이미지 전송</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-0A">
       <td rowspan="2">11</td>
       <td rowspan="2">0x0A</td>
-      <td rowspan="2">VMS Pixel Image 요구</td>
+      <td rowspan="2"><a href="/content/class/0x0A_vms_pixel_image.html">VMS Pixel Image 요구</a></td>
       <td>송신</td>
       <td>VMS LED Pixel 상태요구 송신</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-0A">
       <td>수신</td>
       <td>현재표출중인 LED 상태 Pixel 송신</td>
     </tr>
+
+
     <tr>
       <td rowspan="2">12</td>
       <td rowspan="2">0x0B</td>
