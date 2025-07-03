@@ -13,34 +13,283 @@
   <h1>OPCODE 목록</h1>
   <section id="opcode-list">
     <table>
-      <thead>
-      <tr>
-        <th>구분</th>
-        <th>OP CODE</th>
-        <th>명칭</th>
-        <th>센터</th>
-        <th>설명</th>
-        <th>방향</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td rowspan="2">1</td><td rowspan="2">0xFF</td><td rowspan="2">장비 구분</td>
-        <td>송신</td><td>DEVICE ID 요청</td><td rowspan="2">SERVER↔VMS</td>
-      </tr>
-      <tr><td>수신</td><td>DEVICE ID 응답</td></tr>
-      <tr>
-        <td rowspan="2">2</td><td rowspan="2">0x01</td><td rowspan="2">폼 데이터 표출</td>
-        <td>송신</td><td>표출할 폼 데이터 송신</td><td rowspan="2">SERVER↔VMS</td>
-      </tr>
-      <tr><td>수신</td><td>수신 여부 응답(ACK/NAK)</td></tr>
-      <tr>
-        <td rowspan="2">22</td><td rowspan="2">0x15</td><td rowspan="2">UpLoad Font</td>
-        <td>송신</td><td>폰트설정 정보 올리기</td><td rowspan="2">SERVER↔VMS</td>
-      </tr>
-      <tr><td>수신</td><td>폰트설정 정보 응답</td></tr>
-      </tbody>
-    </table>
+    <thead>
+    <tr>
+      <th>구분</th>
+      <th>OP CODE</th>
+      <th>명칭</th>
+      <th>센터</th>
+      <th>설명</th>
+      <th>방향</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td rowspan="2">1</td>
+      <td rowspan="2">0xFF</td>
+      <td rowspan="2">장비 구분</td>
+      <td>송신</td>
+      <td>DEVICE ID 요청</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>DEVICE ID 응답</td>
+    </tr>
+    <tr>
+      <td rowspan="2">2</td>
+      <td rowspan="2">0x01</td>
+      <td rowspan="2">폼 데이터 표출</td>
+      <td>송신</td>
+      <td>표출할 폼 데이터 송신</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">3</td>
+      <td rowspan="2">0x02</td>
+      <td rowspan="2">데이터 다운로드</td>
+      <td>송신</td>
+      <td>INI, CFG, Bitmap, Data파일송신</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">4</td>
+      <td rowspan="2">0x03</td>
+      <td rowspan="2">데이터 업로드</td>
+      <td>송신</td>
+      <td>INI, CFG, Bitmap, Data파일 업로드 요구</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>업로드 데이터 전송</td>
+    </tr>
+    <tr>
+      <td rowspan="2">5</td>
+      <td rowspan="2">0x04</td>
+      <td rowspan="2">VMS 상태제어</td>
+      <td>송신</td>
+      <td>VMS 제어정보 송신</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">6</td>
+      <td rowspan="2">0x05</td>
+      <td rowspan="2">VMS Status 요구</td>
+      <td>송신</td>
+      <td>VMS 상태정보 요구 송신</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>상태 데이터 응답</td>
+    </tr>
+    <tr>
+      <td rowspan="2">7</td>
+      <td rowspan="2">0x06</td>
+      <td rowspan="2">VMS 파라미터 요구</td>
+      <td>송신</td>
+      <td>VMS 로컬 상태 요구 송신</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>로컬 상태 데이터 응답</td>
+    </tr>
+    <tr>
+      <td rowspan="2">8</td>
+      <td rowspan="2">0x07</td>
+      <td rowspan="2">전원 모듈 상태 요구</td>
+      <td>송신</td>
+      <td>전원 모듈 상태를 검사 결과를 요청한다</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>전원 모듈 상태 데이터 응답</td>
+    </tr>
+    <tr>
+      <td rowspan="2">9</td>
+      <td rowspan="2">0x08</td>
+      <td rowspan="2">표출 모듈 상태 요구</td>
+      <td>송신</td>
+      <td>표출 모듈 상태를 검사 결과를 요청한다</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>표출 모듈 상태 데이터 응답</td>
+    </tr>
+    <tr>
+      <td rowspan="2">10</td>
+      <td rowspan="2">0x09</td>
+      <td rowspan="2">VMS 정지영상 요구</td>
+      <td>송신</td>
+      <td>현재 표출되는 이미지 송신 요구</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>현재 표출되는 이미지 전송</td>
+    </tr>
+    <tr>
+      <td rowspan="2">11</td>
+      <td rowspan="2">0x0A</td>
+      <td rowspan="2">VMS Pixel Image 요구</td>
+      <td>송신</td>
+      <td>VMS LED Pixel 상태요구 송신</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>현재표출중인 LED 상태 Pixel 송신</td>
+    </tr>
+    <tr>
+      <td rowspan="2">12</td>
+      <td rowspan="2">0x0B</td>
+      <td rowspan="2">현재 표출 폼 Upload</td>
+      <td>송신</td>
+      <td>Local에서 표출 중인 폼 Upload요구</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>현재표출중인 전체폼 송신</td>
+    </tr>
+    <tr>
+      <td rowspan="2">13</td>
+      <td rowspan="2">0x0C</td>
+      <td rowspan="2">Download Schedule Form</td>
+      <td>송신</td>
+      <td>계획된 Form Schedule을 download</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">14</td>
+      <td rowspan="2">0x0D</td>
+      <td rowspan="2">Display Default Form</td>
+      <td>송신</td>
+      <td>디폴트 Form표출 요구</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">15</td>
+      <td rowspan="2">0x0E</td>
+      <td rowspan="2">Download Form</td>
+      <td>송신</td>
+      <td>Form download</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">16</td>
+      <td rowspan="2">0x0F</td>
+      <td rowspan="2">Upload Schedule Form</td>
+      <td>송신</td>
+      <td>스케줄 메시지 업로드 요구</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>스케줄 메세지 전송</td>
+    </tr>
+    <tr>
+      <td rowspan="2">17</td>
+      <td rowspan="2">0x10</td>
+      <td rowspan="2">Blank</td>
+      <td>송신</td>
+      <td>schedule 표출</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">18</td>
+      <td rowspan="2">0x11</td>
+      <td rowspan="2">Display Form ID</td>
+      <td>송신</td>
+      <td>Form ID에 해당하는 Form 표출</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">19</td>
+      <td rowspan="2">0x12</td>
+      <td rowspan="2">통신session 유효 확인</td>
+      <td>송신</td>
+      <td>수신 여부 응답(ACK)</td>
+      <td rowspan="2">VMS→SERVER</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>통신session 유효 확인 요청</td>
+    </tr>
+    <tr>
+      <td rowspan="2">20</td>
+      <td rowspan="2">0x13</td>
+      <td rowspan="2">SignBoard Alarm Control(터널)</td>
+      <td>송신</td>
+      <td>SignBoard Alarm Control 요구 (터널용)</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">21</td>
+      <td rowspan="2">0x14</td>
+      <td rowspan="2">Download Font</td>
+      <td>송신</td>
+      <td>폰트 설정 정보 내리기</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>수신 여부 응답(ACK/NAK)</td>
+    </tr>
+    <tr>
+      <td rowspan="2">22</td>
+      <td rowspan="2">0x15</td>
+      <td rowspan="2">UpLoad Font</td>
+      <td>송신</td>
+      <td>폰트설정 정보 올리기</td>
+      <td rowspan="2">SERVER↔VMS</td>
+    </tr>
+    <tr>
+      <td>수신</td>
+      <td>폰트설정 정보 응답</td>
+    </tr>
+    </tbody>
+  </table>
   </section>
 </main>
 

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>VMS 명세 - 베이스 클래스</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>VMS 베이스 클래스</h1>
+    <section id="class-design">
+        <h2>VmsPacket&lt;T&gt; Class (송신, 수신 모두 사용)</h2>
+        <h3 id="section-4-1">1. VmsPacket&lt;T&gt;</h3>
+        <pre><code class="language-java">package com.vms.protocol;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * 제네릭을 사용하여 데이터 페이로드의 타입을 지정할 수 있는 VMS 베이스 패킷 클래스입니다.
+ *
+ * @param &lt;T&gt; 패킷의 data 필드에 담길 데이터 객체의 타입
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VmsPacket&lt;T&gt; {
+    /**
+     * 송신지 IP 주소 (16 Bytes)
+     */
+    private String senderIp;
+
+    /**
+     * 목적지 IP 주소 (16 Bytes)
+     */
+    private String destinationIp;
+
+    /**
+     * 제어기 종류 (2 Bytes, 예: "MS")
+     */
+    private String controllerKind;
+
+    /**
+     * 제어기 고유번호 (4 Bytes)
+     */
+    private ControllerStationNumber stationNumber;
+
+    /**
+     * OPCODE와 DATA 필드의 전체 길이 (4 Bytes)
+     */
+    private int totalLength;
+
+    /**
+     * 운영 코드 (1 Byte)
+     */
+    private OpCode opcode;
+
+    /**
+     * 제네릭 타입 T에 해당하는 실제 데이터 객체(Payload)입니다.
+     */
+    private T data;
+}
+</code></pre>
+
+        <h3 id="section-4-2">2. ControllerStationNumber</h3>
+        <pre><code class="language-java">package com.vms.protocol;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * 제어기(VMS)의 고유 번호를 나타내는 클래스입니다.
+ * 노선 번호와 컨트롤러 번호로 구성됩니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ControllerStationNumber {
+    /**
+     * 노선 번호 (2 Bytes)
+     */
+    private int lineNo;
+
+    /**
+     * 컨트롤러(설비) 번호 (2 Bytes)
+     */
+    private int controllerNo;
+}
+</code></pre>
+
+        <h3 id="section-4-3">3. OpCode</h3>
+        <pre><code class="language-java">package com.vms.protocol;
+
+import java.util.Arrays;
+
+public enum OpCode {
+    DEVICE_ID               ((byte) 0xFF, "장비 구분"),
+    FORM_DATA_DISPLAY       ((byte) 0x01, "폼 데이터 표출"),
+    DATA_DOWNLOAD           ((byte) 0x02, "데이터 다운로드"),
+    DATA_UPLOAD             ((byte) 0x03, "데이터 업로드"),
+    VMS_CONTROL             ((byte) 0x04, "VMS 상태제어"),
+    VMS_STATUS_REQUEST      ((byte) 0x05, "VMS Status 요구"),
+    VMS_PARAMETER_REQUEST   ((byte) 0x06, "VMS 파라미터 요구"),
+    POWER_MODULE_STATUS     ((byte) 0x07, "전원 모듈 상태 요구"),
+    DISPLAY_MODULE_STATUS   ((byte) 0x08, "표출 모듈 상태 요구"),
+    VMS_STILL_IMAGE         ((byte) 0x09, "VMS 정지영상 요구"),
+    VMS_PIXEL_IMAGE         ((byte) 0x0A, "VMS Pixel Image 요구"),
+    CURRENT_FORM_UPLOAD     ((byte) 0x0B, "현재 표출 폼 Upload"),
+    DOWNLOAD_SCHEDULE_FORM  ((byte) 0x0C, "Download Schedule Form"),
+    DISPLAY_DEFAULT_FORM    ((byte) 0x0D, "Display Default Form"),
+    DOWNLOAD_FORM           ((byte) 0x0E, "Download Form"),
+    UPLOAD_SCHEDULE_FORM    ((byte) 0x0F, "Upload Schedule Form"),
+    BLANK                   ((byte) 0x10, "Blank"),
+    DISPLAY_FORM_ID         ((byte) 0x11, "Display Form ID"),
+    SESSION_KEEP_ALIVE      ((byte) 0x12, "통신 session 유효 확인"),
+    SIGNBOARD_ALARM_CONTROL ((byte) 0x13, "SignBoard Alarm Control(터널)"),
+    DOWNLOAD_FONT           ((byte) 0x14, "Download Font"),
+    UPLOAD_FONT             ((byte) 0x15, "UpLoad Font");
+
+    private final byte code;
+    private final String description;
+
+    OpCode(byte code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    public byte getCode() {
+        return code;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * byte 값으로부터 해당하는 OpCode enum 상수를 찾아 반환합니다.
+     * @param code 찾으려는 opcode의 byte 값
+     * @return 해당하는 OpCode 상수
+     * @throws IllegalArgumentException 해당하는 OpCode가 없을 경우
+     */
+    public static OpCode fromByte(byte code) {
+        return Arrays.stream(OpCode.values())
+                .filter(opCode -> opCode.code == code)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown OpCode: " + String.format("0x%02X", code)));
+    }
+}
+</code></pre>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="/script/script.js"></script>
+</body>
+</html>

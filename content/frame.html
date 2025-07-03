@@ -13,57 +13,97 @@
 <main class="container">
   <h1>프레임 구조 및 패킷 예시</h1>
   <section id="frame-structure">
-    <h2>a. 전체 프레임 구조</h2>
+    <h2 id="section-1">1. 송신 패킷 구조</h2>
     <table>
       <thead>
       <tr>
-        <th>Field</th>
-        <th>Length</th>
-        <th>Description</th>
+        <th>SENDER IP</th>
+        <th>DESTINATION IP</th>
+        <th>CONTROLLER KIND</th>
+        <th>CONTROLLER STATION NUMBER</th>
+        <th>TOTAL LENGTH</th>
+        <th>OPCODE</th>
+        <th>DATA FIELD</th>
       </tr>
       </thead>
       <tbody>
       <tr>
-        <td><strong>SENDER IP</strong></td>
-        <td>16 byte</td>
-        <td>송신지 IPv4/IPv6 주소<br>Sender IPv4/IPv6 address</td>
+        <td><strong>송신지 IP</strong></td>
+        <td><strong>목적지 IP</strong></td>
+        <td><strong>제어기 종류</strong></td>
+        <td><strong>제어기 고유번호</strong></td>
+        <td><strong>전체 길이</strong></td>
+        <td><strong>운영 코드</strong></td>
+        <td><strong>데이터</strong></td>
       </tr>
       <tr>
-        <td><strong>DESTINATION IP</strong></td>
-        <td>16 byte</td>
-        <td>목적지 IPv4/IPv6 주소<br>Destination IPv4/IPv6 address</td>
+        <td>16 Byte</td>
+        <td>16 Byte</td>
+        <td>2 Byte</td>
+        <td>4 Byte</td>
+        <td>4 Byte</td>
+        <td>1 Byte</td>
+        <td>N Byte</td>
       </tr>
       <tr>
-        <td><strong>CONTROLLER KIND</strong></td>
-        <td>2 byte</td>
-        <td>제어기 종류 코드<br>Controller type code</td>
+        <td>송신 시스템(센터)의 IP 주소</td>
+        <td>수신 시스템(VMS)의 IP 주소</td>
+        <td>장비 종류 코드 (예: 'MS' = VMS)</td>
+        <td>노선번호(2 Byte)와 Controller 번호(2 Byte)로 구성된 고유 ID</td>
+        <td>OPCODE + DATA FIELD 전체 길이</td>
+        <td>메시지 기능을 정의하는 명령어 코드 (예: 0x01 폼 표출)</td>
+        <td>OPCODE에 따른 실제 데이터 영역</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <h2 id="section-2">2. 수신 패킷 구조</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>SENDER IP</th>
+        <th>DESTINATION IP</th>
+        <th>CONTROLLER KIND</th>
+        <th>CONTROLLER STATION NUMBER</th>
+        <th>TOTAL LENGTH</th>
+        <th>OPCODE</th>
+        <th>DATA FIELD</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><strong>송신지 IP</strong></td>
+        <td><strong>목적지 IP</strong></td>
+        <td><strong>제어기 종류</strong></td>
+        <td><strong>제어기 고유번호</strong></td>
+        <td><strong>전체 길이</strong></td>
+        <td><strong>운영 코드</strong></td>
+        <td><strong>데이터</strong></td>
       </tr>
       <tr>
-        <td><strong>CONTROLLER STATION NUMBER</strong></td>
-        <td>4 byte</td>
-        <td>상위 2 byte: 노선번호 / 하위 2 byte: 제어기 일련번호<br>2 bytes: route number / 2 bytes: controller serial number</td>
+        <td>16 Byte</td>
+        <td>16 Byte</td>
+        <td>2 Byte</td>
+        <td>4 Byte</td>
+        <td>4 Byte</td>
+        <td>1 Byte</td>
+        <td>N Byte</td>
       </tr>
       <tr>
-        <td><strong>TOTAL LENGTH</strong></td>
-        <td>4 byte</td>
-        <td>OPCODE(1 byte) + DATA FIELD 길이의 합<br>Sum of OPCODE and DATA FIELD length</td>
-      </tr>
-      <tr>
-        <td><strong>OPCODE</strong></td>
-        <td>1 byte</td>
-        <td>요청/응답 명령어 코드<br>command code</td>
-      </tr>
-      <tr>
-        <td><strong>DATA FIELD</strong></td>
-        <td>N byte</td>
-        <td>OPCODE 별 가변 데이터<br>Variable data</td>
+        <td>송신 시스템(VMS)의 IP 주소</td>
+        <td>수신 시스템(센터)의 IP 주소</td>
+        <td>장비 종류 코드 (예: 'MS' = VMS)</td>
+        <td>자신의 고유 ID를 담아 응답</td>
+        <td>OPCODE + DATA FIELD 전체 길이</td>
+        <td>메시지 기능을 정의하는 코드 또는 요청받은 OPCODE</td>
+        <td>OPCODE에 따른 실제 데이터</td>
       </tr>
       </tbody>
     </table>
   </section>
 
   <section id="packet-example">
-    <h2>b. 인증 ID 요청 (0xFF) 패킷 예시</h2>
+    <h2>3. 인증 ID 요청 (0xFF) 패킷 예시</h2>
     <ul>
       <li><strong>SENDER IP/DESTINATION IP:</strong> 송신지 <code>192.168.0.245</code>, 목적지 <code>192.168.0.10</code><br>각 옥텟을 3자리로 패딩(예: 192 → 192, 10 → 010)하고 나머지 바이트는 '<code>-</code>' (0x2D)로 채워 총 16바이트</li>
       <li><strong>CONTROLLER KIND:</strong> ASCII "<code>MS</code>" (VMS 객체형)</li>
