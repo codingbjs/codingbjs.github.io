@@ -38,3 +38,29 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("navbar-placeholder").innerHTML = "<p>메뉴를 불러오는데 실패했습니다.</p>";
         });
 });
+
+// 테이블 그룹 호버 기능
+const opcodeTableBody = document.getElementById("opcode-list");
+if (opcodeTableBody) {
+    const rows = opcodeTableBody.querySelectorAll("tr[data-group]");
+
+    rows.forEach(row => {
+        // 마우스가 행에 들어왔을 때
+        row.addEventListener("mouseover", (event) => {
+            const group = event.currentTarget.dataset.group;
+            if (!group) return;
+
+            const groupedRows = opcodeTableBody.querySelectorAll(`tr[data-group="${group}"]`);
+            groupedRows.forEach(r => r.classList.add("is-hovered"));
+        });
+
+        // 마우스가 행에서 나갔을 때
+        row.addEventListener("mouseout", (event) => {
+            const group = event.currentTarget.dataset.group;
+            if (!group) return;
+
+            const groupedRows = opcodeTableBody.querySelectorAll(`tr[data-group="${group}"]`);
+            groupedRows.forEach(r => r.classList.remove("is-hovered"));
+        });
+    });
+}

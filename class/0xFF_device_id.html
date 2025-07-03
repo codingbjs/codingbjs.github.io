@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>VMS 명세 - 0xFF 장비 구분</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0xFF: 장비 구분 (Device Identification)</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            서버가 VMS 장비와 연결된 후, 장비의 고유 ID를 요청하고 식별하기 위해 사용하는 초기 인증 절차입니다. 서버는 데이터 없이 요청을 보내고, VMS는 자신의 ID를 담아 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <h3>DeviceIdResponsePayload.java</h3>
+        <p>
+            VMS가 서버로 보내는 응답 패킷의 <code>data</code> 필드에 사용될 전용 페이로드 클래스입니다. 요청 시에는 페이로드가 없습니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OP-CODE 0xFF (장비 구분)에 대한 응답 페이로드 클래스입니다.
+ * VMS 장비의 고유 ID 정보를 담습니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DeviceIdResponsePayload {
+
+    /**
+     * VMS 장비의 고유 ID (15-byte ASCII)
+     * 문서에 명시된 대로, 남는 부분은 0x00으로 채워집니다.
+     * 예: "0010VMS00010"
+     */
+    private String deviceId;
+}
+</code></pre>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>1. 서버 ➔ VMS: 장비 ID 요청</h3>
+        <p>요청 패킷의 <code>data</code> 필드는 비어있으므로, <code>VmsPacket</code>의 제네릭 타입을 <code>Void</code>로 지정하고 페이로드로 <code>null</code>을 전달합니다.</p>
+        <pre><code class="language-java">// 요청 패킷 생성
+VmsPacket&lt;Void&gt; requestPacket = new VmsPacket&lt;&gt;();
+requestPacket.setSenderIp("10.1.1.10");
+requestPacket.setDestinationIp("192.168.0.100");
+requestPacket.setControllerKind("MS");
+requestPacket.setStationNumber(new ControllerStationNumber(10, 1));
+requestPacket.setOpcode(OpCode.DEVICE_ID); // 0xFF
+requestPacket.setTotalLength(1); // 데이터가 없으므로 Opcode 길이(1)만 포함
+requestPacket.setData(null); // 페이로드 없음
+</code></pre>
+
+        <h3>2. VMS ➔ 서버: 장비 ID 응답</h3>
+        <p>VMS는 자신의 ID를 <code>DeviceIdResponsePayload</code> 객체에 담아 응답합니다.</p>
+        <pre><code class="language-java">// 응답 페이로드 생성
+DeviceIdResponsePayload responsePayload = new DeviceIdResponsePayload("0010VMS00010");
+
+// 페이로드를 포함한 응답 패킷 생성
+VmsPacket&lt;DeviceIdResponsePayload&gt; responsePacket = new VmsPacket&lt;&gt;(
+    "192.168.0.100",
+    "10.1.1.10",
+    "MS",
+    new ControllerStationNumber(10, 1),
+    16, // Total Length = Opcode(1) + Data(15)
+    OpCode.DEVICE_ID,
+    responsePayload
+);
+</code></pre>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../script/script.js"></script>
+</body>
+</html>

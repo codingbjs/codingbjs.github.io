@@ -24,30 +24,33 @@
     </tr>
     </thead>
     <tbody>
-    <tr>
+
+    <tr data-group="opcode-ff">
       <td rowspan="2">1</td>
       <td rowspan="2">0xFF</td>
-      <td rowspan="2">장비 구분</td>
+      <td rowspan="2"><a href="/content/class/0xFF_device_id.html">장비 구분</a></td>
       <td>송신</td>
       <td>DEVICE ID 요청</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-ff">
       <td>수신</td>
       <td>DEVICE ID 응답</td>
     </tr>
-    <tr>
+
+    <tr data-group="opcode-01">
       <td rowspan="2">2</td>
       <td rowspan="2">0x01</td>
-      <td rowspan="2">폼 데이터 표출</td>
+      <td rowspan="2"><a href="/content/class/0x01_form_display.html">폼 데이터 표출</a></td>
       <td>송신</td>
       <td>표출할 폼 데이터 송신</td>
       <td rowspan="2">SERVER↔VMS</td>
     </tr>
-    <tr>
+    <tr data-group="opcode-01">
       <td>수신</td>
       <td>수신 여부 응답(ACK/NAK)</td>
     </tr>
+
     <tr>
       <td rowspan="2">3</td>
       <td rowspan="2">0x02</td>

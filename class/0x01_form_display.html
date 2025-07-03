@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x01 폼 데이터 표출</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x01: 폼 데이터 표출 (Display Form Data)</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS로 표출할 화면을 구성하여 전송하는 가장 핵심적인 명령어입니다. 하나의 패킷 안에는 폼의 전체적인 정보를 담는 <strong>'폼 헤더'</strong>와, 화면에 그려질 <strong>여러 '객체(Object)'들의 리스트</strong>가 포함됩니다. 이 구조는 문자, 이미지, 영상 등 다양한 미디어를 복합적으로 표출할 수 있게 합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            이 명령어는 다양한 타입의 객체를 포함하므로, 다형성(Polymorphism)을 활용한 객체지향적 설계가 매우 중요합니다. 모든 표출 객체의 부모가 되는 <code>VmsObject</code> 추상 클래스를 두고, 각 타입에 맞는 하위 클래스를 구현하는 방식을 사용합니다.
+        </p>
+        <h3>1. 메인 페이로드: DisplayFormPayload.java</h3>
+        <pre><code class="language-java">package com.vms.protocol.payload;
+
+import com.vms.protocol.payload.vms.object.VmsObject;
+import lombok.Data;
+import java.util.List;
+
+/**
+ * OP-CODE 0x01 (폼 데이터 표출)을 위한 메인 페이로드 클래스입니다.
+ */
+@Data
+public class DisplayFormPayload {
+    private FormHeader formHeader;
+    private List<VmsObject> objects;
+}</code></pre>
+
+        <h3>2. 폼 헤더: FormHeader.java</h3>
+        <pre><code class="language-java">package com.vms.protocol.payload;
+
+import lombok.Data;
+
+@Data
+public class FormHeader {
+    private int formId;
+    private int totalForms;
+    private int formNumber;
+    private int displayTimeSec;
+    private byte displayEffect;
+    private byte backgroundColor;
+    private int objectCount;
+}</code></pre>
+
+        <h3>3. 객체의 부모: VmsObject.java (추상 클래스)</h3>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
+
+import lombok.Data;
+
+/**
+ * 모든 VMS 표출 객체의 부모가 되는 추상 클래스입니다.
+ * 공통 속성인 좌표, 점멸 여부 등을 정의합니다.
+ */
+@Data
+public abstract class VmsObject {
+    private int objectDataSize;
+    private boolean isBlinking;
+    private int x;
+    private int y;
+    private byte backgroundColor;
+
+    public abstract ObjectType getObjectType();
+}</code></pre>
+
+        <h3>4. 구현 클래스 예시: TextObject.java</h3>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object.text;
+
+import com.vms.protocol.payload.vms.object.VmsObject;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class TextObject extends VmsObject {
+    private FontInfo fontInfo;
+    private String text;
+
+    @Override
+    public ObjectType getObjectType() {
+        return ObjectType.TEXT;
+    }
+}</code></pre>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <p>"공사중" 텍스트와 경고 이미지를 함께 표출하는 패킷을 생성하는 예시입니다.</p>
+        <pre><code class="language-java">
+// 1. 표출할 객체들 생성
+TextObject text = new TextObject();
+text.setX(10);
+text.setY(10);
+text.setText("공사중");
+// ... text 폰트 및 기타 정보 설정
+
+BitmapIdObject image = new BitmapIdObject();
+image.setX(10);
+image.setY(50);
+image.setBitmapId(101); // 미리 다운로드된 경고 이미지 ID
+// ... image 크기 정보 설정
+
+// 2. 폼 헤더 생성
+FormHeader header = new FormHeader();
+header.setFormId(9999); // 임시 표출
+header.setObjectCount(2); // 객체 2개
+// ... 기타 헤더 정보 설정
+
+// 3. 메인 페이로드에 헤더와 객체 리스트 추가
+DisplayFormPayload payload = new DisplayFormPayload();
+payload.setFormHeader(header);
+payload.setObjects(List.of(text, image));
+
+// 4. 최종 패킷 생성
+VmsPacket&lt;DisplayFormPayload&gt; packet = new VmsPacket&lt;&gt;();
+packet.setOpcode(OpCode.FORM_DATA_DISPLAY); // 0x01
+packet.setData(payload);
+// ... 패킷의 나머지 공통 헤더 정보 설정
+</code></pre>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../script/script.js"></script>
+</body>
+</html>
