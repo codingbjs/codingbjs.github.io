@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x0A VMS Pixel Image 요구</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x0A: VMS Pixel Image 요구 (VMS Pixel Image Request)</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비의 현재 표출 화면을 구성하는 모든 LED 픽셀의 RAW 데이터를 직접 요청할 때 사용하는 명령어입니다. 이를 통해 센터는 VMS 화면을 원격에서 그대로 복제하거나 픽셀 단위의 상세한 상태 분석을 수행할 수 있습니다. 서버는 특정 현시(Phase) ID를 지정하여 요청하고, VMS는 해당 화면의 전체 픽셀 데이터를 비트맵 형태로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            요청 시에는 어떤 화면의 픽셀 정보를 원하는지 ID를 전달하고, 응답 시에는 화면의 크기와 실제 픽셀 데이터(byte 배열)를 담을 수 있도록 각각의 페이로드 클래스를 설계합니다.
+        </p>
+
+        <h3>1. PixelImageRequestPayload.java (요청 페이로드)</h3>
+        <p>
+            서버가 VMS로 보내는 요청 패킷의 <code>data</code> 필드에 사용됩니다. 요청할 화면의 현시 ID를 담습니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload.request;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OP-CODE 0x0A (VMS Pixel Image 요구)의 '요청'을 위한 페이로드 클래스입니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PixelImageRequestPayload {
+
+    /**
+     * 데이터를 요청할 현시(Phase) ID (1 Byte)
+     */
+    private int dataId;
+}
+</code></pre>
+
+        <h3>2. PixelImageResponsePayload.java (응답 페이로드)</h3>
+        <p>
+            VMS가 서버로 보내는 응답 패킷의 <code>data</code> 필드에 사용됩니다. 픽셀 데이터는 매우 크기 때문에, 개별 픽셀 객체로 변환하지 않고 원본 <code>byte[]</code> 그대로 전송하는 것이 효율적입니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload.response;
+
+import lombok.Data;
+
+/**
+ * OP-CODE 0x0A (VMS Pixel Image 요구)의 '응답'을 위한 페이로드 클래스입니다.
+ */
+@Data
+public class PixelImageResponsePayload {
+
+    /**
+     * VMS 표출부의 전체 가로 픽셀 수
+     */
+    private int width;
+
+    /**
+     * VMS 표출부의 전체 세로 픽셀 수
+     */
+    private int height;
+
+    /**
+     * 실제 VMS 화면의 픽셀 데이터 (raw byte array)
+     * 1바이트에 2개의 픽셀 정보가 압축되어 있습니다.
+     */
+    private byte[] pixelData;
+}
+</code></pre>
+    </section>
+
+    <section id="serialization-rule">
+        <h2>c. 픽셀 데이터 바이트 구조</h2>
+        <p>
+            응답 페이로드의 <code>pixelData</code>는 프로토콜 규칙에 따라 비트 단위로 압축되어 있습니다. 1 바이트(8 비트)는 2개의 픽셀 정보를 담고 있으며, 각 픽셀은 4비트를 사용합니다.
+        </p>
+        <table>
+            <thead>
+            <tr>
+                <th colspan="4">두 번째 픽셀 (상위 4비트)</th>
+                <th colspan="4">첫 번째 픽셀 (하위 4비트)</th>
+            </tr>
+            <tr>
+                <th>Bit 7</th>
+                <th>Bit 6</th>
+                <th>Bit 5</th>
+                <th>Bit 4</th>
+                <th>Bit 3</th>
+                <th>Bit 2</th>
+                <th>Bit 1</th>
+                <th>Bit 0</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>에러</td>
+                <td>Green</td>
+                <td>Red</td>
+                <td>Blue</td>
+                <td>에러</td>
+                <td>Green</td>
+                <td>Red</td>
+                <td>Blue</td>
+            </tr>
+            </tbody>
+        </table>
+        <ul>
+            <li><strong>데이터 순서:</strong> 전체 화면은 왼쪽 위에서부터 오른쪽으로, 그리고 아래로 순차적으로 구성됩니다.</li>
+            <li><strong>에러 비트(Bit 3, 7):</strong> '1'이면 해당 픽셀에 에러가 있음을 의미합니다.</li>
+            <li><strong>색상 비트(Bit 0-2, 4-6):</strong> 3개의 비트 조합으로 8가지 색상을 표현합니다. (예: '000'=Black, '111'=White)</li>
+        </ul>
+    </section>
+
+    <section id="usage-example">
+        <h2>d. 패킷 생성 예시</h2>
+        <h3>1. 서버 ➔ VMS: 픽셀 이미지 요청</h3>
+        <pre><code class="language-java">
+// 1. 첫 번째 현시(Phase)의 픽셀 데이터를 요청
+PixelImageRequestPayload requestPayload = new PixelImageRequestPayload(1);
+
+// 2. 페이로드를 포함한 요청 패킷 생성
+VmsPacket&lt;PixelImageRequestPayload&gt; requestPacket = new VmsPacket&lt;&gt;();
+requestPacket.setOpcode(OpCode.VMS_PIXEL_IMAGE); // 0x0A
+requestPacket.setData(requestPayload);
+// ... 공통 헤더 정보 설정
+</code></pre>
+
+        <h3>2. VMS ➔ 서버: 픽셀 데이터 응답</h3>
+        <p>VMS는 자신의 화면 버퍼에서 픽셀 데이터를 읽어와 응답합니다.</p>
+        <pre><code class="language-java">
+// 1. VMS가 자신의 프레임 버퍼에서 픽셀 데이터를 raw byte[]로 가져옴
+// (예: 320x96 해상도일 경우, (320 * 96) / 2 = 15360 바이트)
+byte[] screenBuffer = getScreenPixelData();
+
+// 2. 응답 페이로드 생성
+PixelImageResponsePayload responsePayload = new PixelImageResponsePayload();
+responsePayload.setWidth(320);
+responsePayload.setHeight(96);
+responsePayload.setPixelData(screenBuffer);
+
+// 3. 페이로드를 포함한 응답 패킷 생성
+VmsPacket&lt;PixelImageResponsePayload&gt; responsePacket = new VmsPacket&lt;&gt;();
+responsePacket.setOpcode(OpCode.VMS_PIXEL_IMAGE); // 요청받은 Opcode 그대로 응답
+responsePacket.setData(responsePayload);
+// ... 공통 헤더 정보 설정
+</code></pre>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>
