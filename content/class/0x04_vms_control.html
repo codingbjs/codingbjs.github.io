@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x04 VMS 상태제어</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x04: VMS 상태제어 (VMS Control)</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비의 다양한 하드웨어 및 소프트웨어 상태를 원격으로 제어하기 위해 사용하는 명령어입니다. 패킷의 데이터 필드는 <strong>'제어 코드'</strong>와 그에 필요한 <strong>'제어 데이터'</strong>로 구성됩니다. VMS는 이 요청을 수신하면 성공/실패 여부를 ACK/NAK로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            하나의 페이로드 클래스에서 모든 제어 명령을 다룰 수 있도록 설계했습니다. 각 제어 명령에 필요한 Enum을 함께 정의하여 사용합니다.
+        </p>
+        <h3>1. VmsControlPayload.java</h3>
+        <p>
+            OP-CODE 0x04의 모든 제어 명령을 위한 단일 페이로드 클래스입니다. 제어하려는 대상에 맞는 필드만 설정하여 사용합니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload;
+
+import com.vms.protocol.code.control.BrightnessMode;
+import com.vms.protocol.code.control.ControlType;
+import com.vms.protocol.code.control.FanHeaterMode;
+import com.vms.protocol.code.control.PowerMode;
+import lombok.Data;
+
+/**
+ * OP-CODE 0x04 (VMS 상태제어)를 위한 통합 페이로드 클래스입니다.
+ */
+@Data
+public class VmsControlPayload {
+
+    /**
+     * 제어할 명령의 종류 (필수)
+     */
+    private ControlType controlType;
+
+    /* --- 각 제어 타입에 필요한 데이터 필드 --- */
+
+    // 전원 제어 (0x01)
+    private PowerMode powerMode;
+
+    // 제어기 리셋 (0x02) - 데이터 없음
+
+    // 통신 재시도 횟수 설정 (0x03)
+    private Integer retryCount; // 1 ~ 9
+
+    // 제어기 시간 설정 (0x04)
+    private String dateTimeString; // "YYYYMMDDHHNNSS" 형식
+
+    // 운영모드 제어 (0x05)
+    private Boolean isAutoOperation; // true: 자동, false: 수동
+
+    // 밝기 제어 (0x06)
+    private BrightnessMode brightnessMode;
+    private Integer brightnessValue; // 0 ~ 100
+
+    // Fan 제어 (0x07)
+    private FanHeaterMode fanMode;
+    private Integer fanOnTemperature;
+
+    // Heater 제어 (0x08)
+    private FanHeaterMode heaterMode;
+    private Integer heaterOnTemperature;
+
+    // 화면 배색 제어 (0x09)
+    private ScreenColor screenBackgroundColor;
+
+    // 테스트 패턴 출력 (0x0A)
+    private TestPattern testPattern;
+
+    // 디폴트 시나리오 동작시간 (0x0B)
+    private Integer defaultScenarioTimeInSeconds;
+
+    // 메시지 송출제어 (0x0C)
+    private MessageDisplayMode messageDisplayMode;
+
+}
+</code></pre>
+
+        <h3>2. 제어 관련 Enum 클래스</h3>
+        <p>제어 코드와 각 제어에 사용되는 모드들을 타입 안전하게 관리하기 위한 열거형 클래스들입니다.</p>
+
+        <h4>ControlType.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+import lombok.Getter;
+@Getter
+public enum ControlType {
+    POWER_CONTROL(0x01),
+    RESET_CONTROLLER(0x02),
+    SET_RETRY_COUNT(0x03),
+    SET_DATETIME(0x04),
+    OPERATION_MODE_CONTROL(0x05),
+    BRIGHTNESS_CONTROL(0x06),
+    FAN_CONTROL(0x07),
+    HEATER_CONTROL(0x08),
+    BACKGROUND_COLOR_CONTROL(0x09),
+    TEST_PATTERN_DISPLAY(0x0A),
+    DEFAULT_SCENARIO_TIME(0x0B),
+    MESSAGE_DISPLAY_CONTROL(0x0C);
+
+    private final int code;
+
+    ControlType(int code) { this.code = code; }
+}</code></pre>
+
+        <h4>PowerMode.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+public enum PowerMode { ON, OFF }</code></pre>
+
+        <h4>BrightnessMode.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+public enum BrightnessMode { DAY, NIGHT, AUTO, MANUAL }</code></pre>
+
+        <h4>FanHeaterMode.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+public enum FanHeaterMode { OFF, ON, AUTO }</code></pre>
+
+        <h4>ScreenColor.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+public enum ScreenColor { BLACK, RED, GREEN, BLUE, YELLOW, MAGENTA, AQUA, WHITE}</code></pre>
+
+        <h4>TestPattern.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+public enum TestPattern { RED, GREEN, BLUE, PATTERN}</code></pre>
+
+        <h4>MessageDisplayMode.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+public enum MessageDisplayMode { OFF, ON, AUTO}</code></pre>
+
+    </section>
+
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>서버 ➔ VMS: 밝기를 '자동'으로 제어하는 요청</h3>
+        <pre><code class="language-java">
+// 1. 제어 페이로드 객체 생성
+VmsControlPayload payload = new VmsControlPayload();
+
+// 2. 수행할 제어 타입 지정 (필수)
+payload.setControlType(ControlType.BRIGHTNESS_CONTROL);
+
+// 3. 해당 제어에 필요한 데이터 설정
+payload.setBrightnessMode(BrightnessMode.AUTO);
+payload.setBrightnessValue(0); // 자동 모드이므로 값은 0으로 설정
+
+// 4. 페이로드를 포함한 제어 요청 패킷 생성
+VmsPacket&lt;VmsControlPayload&gt; controlPacket = new VmsPacket&lt;&gt;();
+controlPacket.setOpcode(OpCode.VMS_CONTROL); // 0x04
+controlPacket.setData(payload);
+// ... 공통 헤더 정보 설정
+
+// 5. VmsPacketConverter가 패킷을 byte[]로 변환
+// 변환기는 payload.getControlType()에 따라 필요한 필드만 직렬화합니다.
+// byte[] networkPacket = converter.toByteArray(controlPacket);
+</code></pre>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>

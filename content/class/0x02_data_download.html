@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x02 데이터 다운로드</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x02: 데이터 다운로드 (Data Download)</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비로 특정 파일(INI, CFG, Bitmap, Font 등)을 전송(다운로드)할 때 사용하는 명령어입니다. VMS 장비는 이 요청을 수신하면 ACK 또는 NAK로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            요청 패킷의 데이터는 '저장 위치', '파일명', '파일 데이터'라는 논리적인 정보로 구성됩니다. <code>파일명 길이</code>와 <code>데이터 크기</code> 같은 물리적 프로토콜 필드는 이 객체를 바이트로 변환하는 과정(직렬화)에서 자동으로 처리됩니다.
+        </p>
+
+        <h3>1. SaveLocation.java (Enum)</h3>
+        <p>
+            데이터 저장 위치 코드를 타입 안전하게 관리하기 위한 열거형(Enum) 클래스입니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.code;
+
+import lombok.Getter;
+import java.util.Arrays;
+
+@Getter
+public enum SaveLocation {
+    PATH_IN_FILENAME        ((byte) 0x00, "파일명에 포함"),
+    PROGRAM_DIRECTORY       ((byte) 0x01, "로컬 프로그램 디렉토리"),
+    PROGRAM_ROOT_DIRECTORY  ((byte) 0x02, "로컬 프로그램 루트 디렉토리"),
+    WINDOWS_DIRECTORY       ((byte) 0x03, "윈도우즈 디렉토리"),
+    WINDOWS_SYSTEM_DIRECTORY((byte) 0x04, "윈도우즈 시스템 디렉토리"),
+    PROGRAM_IMAGE_DIRECTORY ((byte) 0x05, "로컬 프로그램 이미지 디렉토리"),
+    DEFAULT_FORM_DIRECTORY  ((byte) 0x06, "로컬 프로그램 디폴트 폼 디렉토리"),
+    WINDOWS_FONT_PATH       ((byte) 0x07, "윈도우즈 시스템 Font 경로");
+
+    private final byte code;
+    private final String description;
+
+    SaveLocation(byte code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    public static SaveLocation fromByte(byte code) {
+        return Arrays.stream(values())
+                .filter(loc -> loc.code == code)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown SaveLocation code: " + code));
+    }
+}
+</code></pre>
+
+        <h3>2. DataDownloadPayload.java</h3>
+        <p>
+            개발자가 직접 다루는 논리적인 데이터 객체입니다. 길이 필드를 포함하지 않아 사용이 간편하고 오류 발생 가능성이 낮습니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload;
+
+import com.vms.protocol.code.SaveLocation;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OP-CODE 0x02 (데이터 다운로드)를 위한 페이로드 클래스입니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DataDownloadPayload {
+
+    /**
+     * 다운로드 데이터 저장 위치
+     */
+    private SaveLocation saveLocation;
+
+    /**
+     * 저장할 파일명 (1 ~ 255 바이트)
+     */
+    private String fileName;
+
+    /**
+     * 실제 파일 데이터 (바이너리)
+     */
+    private byte[] fileData;
+}
+</code></pre>
+    </section>
+
+    <section id="serialization-rule">
+        <h2>c. 바이트 변환(직렬화) 규칙</h2>
+        <p>
+            <code>DataDownloadPayload</code> 객체를 실제 네트워크로 전송하기 위한 <code>byte[]</code>로 변환할 때, 아래와 같은 순서와 규칙을 따라야 합니다. 이 로직은 <code>VmsPacketConverter</code>와 같은 변환기 클래스가 담당합니다.
+        </p>
+        <table>
+            <thead>
+            <tr>
+                <th>필드</th>
+                <th>길이 (Byte)</th>
+                <th>설명</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Save Location Code</td>
+                <td>1</td>
+                <td><code>payload.getSaveLocation().getCode()</code>의 값</td>
+            </tr>
+            <tr>
+                <td><strong>File Name Length</strong></td>
+                <td><strong>1</strong></td>
+                <td><strong><code>payload.getFileName()</code>을 UTF-8 바이트로 변환한 후의 길이. (1 ~ 255)</strong></td>
+            </tr>
+            <tr>
+                <td><strong>File Data Length</strong></td>
+                <td><strong>4</strong></td>
+                <td><strong><code>payload.getFileData()</code>의 길이. (Big-Endian)</strong></td>
+            </tr>
+            <tr>
+                <td>File Name</td>
+                <td>가변 (N)</td>
+                <td><code>payload.getFileName()</code>의 실제 바이트 데이터</td>
+            </tr>
+            <tr>
+                <td>File Data</td>
+                <td>가변 (M)</td>
+                <td><code>payload.getFileData()</code>의 실제 바이트 데이터</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="usage-example">
+        <h2>d. 패킷 생성 예시</h2>
+        <h3>서버 ➔ VMS: 폰트 파일 다운로드 요청</h3>
+        <p>개발자는 길이 필드를 직접 계산할 필요 없이, 논리적인 데이터만 페이로드 객체에 담아 패킷을 생성합니다.</p>
+        <pre><code class="language-java">
+// 1. 전송할 파일 데이터를 byte[]로 준비
+byte[] fontFileData = Files.readAllBytes(Paths.get("C:/path/to/NewFont.ttf"));
+
+// 2. 다운로드 페이로드 생성 (길이 필드 없음)
+DataDownloadPayload payload = new DataDownloadPayload(
+    SaveLocation.WINDOWS_FONT_PATH,
+    "NewFont.ttf",
+    fontFileData
+);
+
+// 3. 페이로드를 포함한 요청 패킷 생성
+VmsPacket&lt;DataDownloadPayload&gt; downloadRequestPacket = new VmsPacket&lt;&gt;();
+downloadRequestPacket.setOpcode(OpCode.DATA_DOWNLOAD); // 0x02
+downloadRequestPacket.setData(payload);
+// ... 공통 헤더 정보 설정
+
+// 4. VmsPacketConverter가 내부적으로 길이 필드를 포함하여 byte[]로 변환
+// byte[] networkPacket = converter.toByteArray(downloadRequestPacket);
+</code></pre>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>
