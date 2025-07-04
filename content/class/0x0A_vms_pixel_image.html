@@ -28,9 +28,6 @@
         </p>
 
         <h3>1. PixelImageRequestPayload.java (요청 페이로드)</h3>
-        <p>
-            서버가 VMS로 보내는 요청 패킷의 <code>data</code> 필드에 사용됩니다. 요청할 화면의 현시 ID를 담습니다.
-        </p>
         <pre><code class="language-java">package com.vms.protocol.payload.request;
 
 import lombok.AllArgsConstructor;
@@ -53,9 +50,6 @@ public class PixelImageRequestPayload {
 </code></pre>
 
         <h3>2. PixelImageResponsePayload.java (응답 페이로드)</h3>
-        <p>
-            VMS가 서버로 보내는 응답 패킷의 <code>data</code> 필드에 사용됩니다. 픽셀 데이터는 매우 크기 때문에, 개별 픽셀 객체로 변환하지 않고 원본 <code>byte[]</code> 그대로 전송하는 것이 효율적입니다.
-        </p>
         <pre><code class="language-java">package com.vms.protocol.payload.response;
 
 import lombok.Data;
@@ -81,6 +75,49 @@ public class PixelImageResponsePayload {
      * 1바이트에 2개의 픽셀 정보가 압축되어 있습니다.
      */
     private byte[] pixelData;
+}
+</code></pre>
+
+        <h3>3. PixelColor.java (Enum)</h3>
+        <p>픽셀 데이터의 색상 코드를 타입 안전하게 관리하기 위한 열거형 클래스입니다.</p>
+        <pre><code class="language-java">package com.vms.protocol.code.pixel;
+
+import lombok.Getter;
+import java.util.Arrays;
+
+/**
+ * 4비트로 표현되는 VMS 픽셀의 색상 코드를 관리하는 열거형 클래스입니다.
+ */
+@Getter
+public enum PixelColor {
+    BLACK   ((byte) 0b000, "Black"),
+    BLUE    ((byte) 0b001, "Blue"),
+    RED     ((byte) 0b010, "Red"),
+    MAGENTA ((byte) 0b011, "Magenta"),
+    GREEN   ((byte) 0b100, "Green"),
+    AQUA    ((byte) 0b101, "Aqua"),
+    YELLOW  ((byte) 0b110, "Yellow"),
+    WHITE   ((byte) 0b111, "White");
+
+    private final byte code;
+    private final String description;
+
+    PixelColor(byte code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    /**
+     * 3비트 값으로부터 해당하는 PixelColor enum 상수를 찾아 반환합니다.
+     * @param code 3비트 색상 코드 (0-7)
+     * @return 해당하는 PixelColor 상수
+     */
+    public static PixelColor fromCode(byte code) {
+        return Arrays.stream(values())
+                .filter(color -> color.code == code)
+                .findFirst()
+                .orElse(BLACK); // 기본값으로 Black 반환
+    }
 }
 </code></pre>
     </section>
@@ -123,18 +160,17 @@ public class PixelImageResponsePayload {
         <ul>
             <li><strong>데이터 순서:</strong> 전체 화면은 왼쪽 위에서부터 오른쪽으로, 그리고 아래로 순차적으로 구성됩니다.</li>
             <li><strong>에러 비트(Bit 3, 7):</strong> '1'이면 해당 픽셀에 에러가 있음을 의미합니다.</li>
-            <li><strong>색상 비트(Bit 0-2, 4-6):</strong> 3개의 비트 조합으로 8가지 색상을 표현합니다. (예: '000'=Black, '111'=White)</li>
+            <li><strong>색상 비트(Bit 0-2, 4-6):</strong> 3개의 비트 조합으로 8가지 색상을 표현합니다. (예: <code>PixelColor.BLACK.getCode()</code> = 0b000)</li>
         </ul>
     </section>
 
     <section id="usage-example">
-        <h2>d. 패킷 생성 예시</h2>
+        <h2>d. 패킷 생성 및 데이터 파싱 예시</h2>
         <h3>1. 서버 ➔ VMS: 픽셀 이미지 요청</h3>
         <pre><code class="language-java">
-// 1. 첫 번째 현시(Phase)의 픽셀 데이터를 요청
+// 첫 번째 현시(Phase)의 픽셀 데이터를 요청
 PixelImageRequestPayload requestPayload = new PixelImageRequestPayload(1);
 
-// 2. 페이로드를 포함한 요청 패킷 생성
 VmsPacket&lt;PixelImageRequestPayload&gt; requestPacket = new VmsPacket&lt;&gt;();
 requestPacket.setOpcode(OpCode.VMS_PIXEL_IMAGE); // 0x0A
 requestPacket.setData(requestPayload);
@@ -142,23 +178,49 @@ requestPacket.setData(requestPayload);
 </code></pre>
 
         <h3>2. VMS ➔ 서버: 픽셀 데이터 응답</h3>
-        <p>VMS는 자신의 화면 버퍼에서 픽셀 데이터를 읽어와 응답합니다.</p>
         <pre><code class="language-java">
-// 1. VMS가 자신의 프레임 버퍼에서 픽셀 데이터를 raw byte[]로 가져옴
-// (예: 320x96 해상도일 경우, (320 * 96) / 2 = 15360 바이트)
+// VMS가 자신의 프레임 버퍼에서 픽셀 데이터를 raw byte[]로 가져옴
 byte[] screenBuffer = getScreenPixelData();
 
-// 2. 응답 페이로드 생성
 PixelImageResponsePayload responsePayload = new PixelImageResponsePayload();
 responsePayload.setWidth(320);
 responsePayload.setHeight(96);
 responsePayload.setPixelData(screenBuffer);
 
-// 3. 페이로드를 포함한 응답 패킷 생성
 VmsPacket&lt;PixelImageResponsePayload&gt; responsePacket = new VmsPacket&lt;&gt;();
-responsePacket.setOpcode(OpCode.VMS_PIXEL_IMAGE); // 요청받은 Opcode 그대로 응답
+responsePacket.setOpcode(OpCode.VMS_PIXEL_IMAGE);
 responsePacket.setData(responsePayload);
 // ... 공통 헤더 정보 설정
+</code></pre>
+
+        <h3>3. 센터: 수신된 픽셀 데이터 파싱 예시</h3>
+        <p>수신한 <code>pixelData</code> 바이트 배열을 <code>PixelColor</code> 리스트로 변환하여 활용하는 예시입니다.</p>
+        <pre><code class="language-java">
+public class PixelDataParser {
+
+    public List&lt;Pixel&gt; parse(byte[] pixelData) {
+        List&lt;Pixel&gt; pixels = new ArrayList&lt;&gt;();
+        for (byte b : pixelData) {
+            // 첫 번째 픽셀 (하위 4비트)
+            boolean firstHasError = (b & 0x08) != 0; // Bit 3
+            PixelColor firstColor = PixelColor.fromCode((byte) (b & 0x07));
+            pixels.add(new Pixel(firstColor, firstHasError));
+
+            // 두 번째 픽셀 (상위 4비트)
+            boolean secondHasError = (b & 0x80) != 0; // Bit 7
+            PixelColor secondColor = PixelColor.fromCode((byte) ((b >> 4) & 0x07));
+            pixels.add(new Pixel(secondColor, secondHasError));
+        }
+        return pixels;
+    }
+
+    // 픽셀 하나의 정보를 담는 간단한 DTO
+    @Data @AllArgsConstructor
+    public static class Pixel {
+        private PixelColor color;
+        private boolean hasError;
+    }
+}
 </code></pre>
     </section>
 
