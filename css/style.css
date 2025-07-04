@@ -127,3 +127,33 @@ footer {
     padding: 12px; /* 셀 패딩과 동일하게 맞춰줌 */
     margin: -12px; /* 부모 td의 패딩을 무시하고 꽉 채움 */
 }
+
+/* style.css 파일 하단에 추가 */
+
+.alert-box {
+    background-color: #e6f7ff; /* 밝은 파란색 배경 */
+    border-left: 6px solid #1890ff; /* 파란색 강조선 */
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+.alert-box strong {
+    color: #1890ff;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 5px;
+}
+.alert-box p {
+    margin: 5px 0;
+}
+.alert-box ul {
+    margin-top: 10px;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+.alert-box li {
+    background-color: transparent;
+    border-left: none;
+    padding: 2px 0;
+    margin-bottom: 2px;
+}
