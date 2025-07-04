@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x14 Download Font</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x14: Download Font</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비에 사용자 정의 폰트를 추가할 때 사용하는 명령어입니다. 이 기능은 2단계로 동작합니다.
+        </p>
+        <ol>
+            <li><strong>1단계 (파일 다운로드):</strong> 먼저 <code>0x02 (데이터 다운로드)</code> 명령어를 사용하여 폰트 파일(*.FNT, *.TTF 등)을 VMS의 윈도우즈 폰트 경로(<code>SaveLocation.WINDOWS_FONT_PATH</code>)로 전송합니다.</li>
+            <li><strong>2단계 (폰트 등록):</strong> 그 다음, <code>0x14</code> 명령어를 사용하여 방금 다운로드한 폰트 파일명을 VMS의 특정 사용자 정의 폰트 코드에 할당(등록)합니다.</li>
+        </ol>
+        <p>
+            이 요청을 받은 VMS는 성공/실패 여부를 ACK/NAK로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            서버의 요청에는 등록할 폰트 코드와 파일명을 담는 전용 페이로드 클래스가 필요합니다.
+        </p>
+
+        <h3>1. UserDefinedFont.java (Enum)</h3>
+        <p>
+            사용자 정의 폰트를 할당할 수 있는 예약된 폰트 코드(0x27 ~ 0x36)를 관리하는 열거형 클래스입니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.code.font;
+
+import lombok.Getter;
+
+@Getter
+public enum UserDefinedFont {
+    FONT_1 ((byte) 0x27),
+    FONT_2 ((byte) 0x28),
+    FONT_3 ((byte) 0x29),
+    FONT_4 ((byte) 0x30),
+    FONT_5 ((byte) 0x31),
+    FONT_6 ((byte) 0x32),
+    FONT_7 ((byte) 0x33),
+    FONT_8 ((byte) 0x34),
+    FONT_9 ((byte) 0x35),
+    FONT_10((byte) 0x36);
+
+    private final byte code;
+    UserDefinedFont(byte code) { this.code = code; }
+}
+</code></pre>
+
+        <h3>2. DownloadFontPayload.java (요청 페이로드)</h3>
+        <p>
+            서버가 VMS로 보내는 요청 패킷의 <code>data</code> 필드에 사용됩니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload.request;
+
+import com.vms.protocol.code.font.UserDefinedFont;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OP-CODE 0x14 (Download Font)의 '요청'을 위한 페이로드 클래스입니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DownloadFontPayload {
+
+    /**
+     * 할당할 사용자 정의 폰트 코드 (1 Byte)
+     */
+    private UserDefinedFont fontCode;
+
+    /**
+     * 등록할 폰트의 이름 (30 Bytes)
+     */
+    private String fontName;
+}
+</code></pre>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>서버 ➔ VMS: 'NanumGothic.ttf' 폰트를 예약폰트 #1(0x27)로 등록</h3>
+
+        <h4>1단계: 폰트 파일 전송 (0x02 명령어 사용)</h4>
+        <pre><code class="language-java">
+// 1. 폰트 파일 데이터를 byte[]로 준비
+byte[] fontFileData = Files.readAllBytes(Paths.get("C:/fonts/NanumGothic.ttf"));
+
+// 2. 0x02용 다운로드 페이로드 생성
+DataDownloadPayload filePayload = new DataDownloadPayload(
+    SaveLocation.WINDOWS_FONT_PATH,
+    "NanumGothic.ttf",
+    fontFileData
+);
+
+// 3. 0x02 요청 패킷 생성 및 전송
+VmsPacket&lt;DataDownloadPayload&gt; fileDownloadPacket = new VmsPacket&lt;&gt;();
+fileDownloadPacket.setOpcode(OpCode.DATA_DOWNLOAD); // 0x02
+fileDownloadPacket.setData(filePayload);
+// ... 공통 헤더 정보 설정 후 전송
+</code></pre>
+
+        <h4>2단계: 폰트 등록 (0x14 명령어 사용)</h4>
+        <pre><code class="language-java">
+// 1. 폰트 등록을 위한 요청 페이로드 생성
+DownloadFontPayload fontPayload = new DownloadFontPayload(
+    UserDefinedFont.FONT_1, // 0x27 코드에
+    "NanumGothic.ttf"       // 이 이름의 폰트를 등록
+);
+
+// 2. 0x14 요청 패킷 생성 및 전송
+VmsPacket&lt;DownloadFontPayload&gt; fontRegisterPacket = new VmsPacket&lt;&gt;();
+fontRegisterPacket.setOpcode(OpCode.DOWNLOAD_FONT); // 0x14
+fontRegisterPacket.setData(fontPayload);
+// ... 공통 헤더 정보 설정 후 전송
+</code></pre>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>

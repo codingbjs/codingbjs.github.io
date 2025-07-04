@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x0F Upload Schedule Form</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x0F: Upload Schedule Form</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비에 현재 저장되어 있는 표출 스케줄 정보를 요청(업로드)할 때 사용하는 명령어입니다. 서버는 데이터 없이 요청을 보내고, VMS는 저장된 스케줄 목록을 <code>0x0C</code> 명령어와 동일한 데이터 구조로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            이 명령어의 응답 페이로드는 <strong><a href="0x0C_download_schedule_form.html">0x0C: Download Schedule Form</a>에서 설계한 클래스들을 그대로 재사용</strong>합니다.
+        </p>
+        <ul>
+            <li><strong>응답 페이로드:</strong> <code>DownloadSchedulePayload</code></li>
+            <li><strong>스케줄 아이템 DTO:</strong> <code>ScheduledFormItem</code></li>
+        </ul>
+        <p>
+            요청 시에는 데이터가 없으므로 별도의 요청 페이로드 클래스는 필요하지 않습니다.
+        </p>
+
+        <h3>1. DownloadSchedulePayload.java (재사용되는 응답 페이로드)</h3>
+        <pre><code class="language-java">package com.vms.protocol.payload.request;
+
+import com.vms.protocol.dto.ScheduledFormItem;
+import lombok.Data;
+import java.util.List;
+
+/**
+ * OP-CODE 0x0C의 요청 페이로드이지만, 0x0F의 응답 페이로드로도 재사용됩니다.
+ */
+@Data
+public class DownloadSchedulePayload {
+
+    /**
+     * 스케줄에 포함될 폼 아이템 리스트 (최대 10개)
+     */
+    private List&lt;ScheduledFormItem&gt; scheduledForms;
+}
+</code></pre>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>1. 서버 ➔ VMS: 스케줄 업로드 요청</h3>
+        <p>요청 패킷의 <code>data</code> 필드는 비어있으므로, 페이로드로 <code>null</code>을 전달합니다.</p>
+        <pre><code class="language-java">
+VmsPacket&lt;Void&gt; requestPacket = new VmsPacket&lt;&gt;();
+requestPacket.setOpcode(OpCode.UPLOAD_SCHEDULE_FORM); // 0x0F
+requestPacket.setData(null);
+requestPacket.setTotalLength(1);
+// ... 공통 헤더 정보 설정
+</code></pre>
+
+        <h3>2. VMS ➔ 서버: 스케줄 정보 응답</h3>
+        <p>VMS는 현재 저장된 스케줄 정보를 <code>DownloadSchedulePayload</code> 객체에 채워서 응답합니다.</p>
+        <pre><code class="language-java">
+// 1. VMS에 저장된 스케줄 아이템들을 가져옴
+ScheduledFormItem item1 = new ScheduledFormItem(101, 5);
+ScheduledFormItem item2 = new ScheduledFormItem(102, 10);
+
+// 2. 응답 페이로드 생성 (0x0C의 요청 페이로드와 동일한 클래스 사용)
+DownloadSchedulePayload payload = new DownloadSchedulePayload();
+payload.setScheduledForms(List.of(item1, item2));
+
+// 3. 페이로드를 포함한 응답 패킷 생성
+VmsPacket&lt;DownloadSchedulePayload&gt; responsePacket = new VmsPacket&lt;&gt;();
+responsePacket.setOpcode(OpCode.UPLOAD_SCHEDULE_FORM); // 요청받은 Opcode 그대로 응답
+responsePacket.setData(payload);
+// ... 공통 헤더 정보 설정
+</code></pre>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>

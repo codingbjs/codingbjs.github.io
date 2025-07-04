@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x0E Download Form</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x0E: Download Form</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비에 특정 폼(Form) 데이터를 미리 저장(다운로드)할 때 사용하는 명령어입니다. 이 명령어를 통해 VMS는 나중에 `0x11 Display Form ID` 명령어로 해당 폼을 즉시 표출할 수 있습니다. VMS는 이 요청을 수신하면 성공/실패 여부를 ACK/NAK로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            이 명령어의 요청 페이로드는 <strong><a href="0x01_form_display.html">0x01: 폼 데이터 표출</a>에서 설계한 클래스들을 그대로 재사용</strong>합니다. 이는 프로토콜의 일관성을 유지하고 코드 중복을 방지하는 효율적인 방법입니다.
+        </p>
+        <ul>
+            <li><strong>메인 페이로드:</strong> <code>DisplayFormPayload</code></li>
+            <li><strong>폼 헤더:</strong> <code>FormHeader</code></li>
+            <li><strong>표출 객체:</strong> <code>VmsObject</code>를 상속받는 <code>TextObject</code>, <code>BitmapIdObject</code> 등</li>
+        </ul>
+        <p>
+            VMS의 응답은 단순 ACK/NAK이므로 별도의 응답 페이로드 클래스는 필요하지 않습니다.
+        </p>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>서버 ➔ VMS: ID가 201번인 폼 데이터 다운로드 요청</h3>
+        <p>서버는 `DisplayFormPayload`를 구성하여 VMS로 전송합니다. 이 구조는 `0x01` 명령어를 사용할 때와 완전히 동일합니다.</p>
+        <pre><code class="language-java">
+// 1. 표출할 객체들 생성
+TextObject text = new TextObject();
+text.setX(20);
+text.setY(30);
+text.setText("안전 운전 하세요");
+// ... text 폰트 및 기타 정보 설정
+
+// 2. 폼 헤더 생성
+FormHeader header = new FormHeader();
+header.setFormId(201); // 저장할 폼의 ID를 201로 지정
+header.setObjectCount(1);
+// ... 기타 헤더 정보 설정
+
+// 3. 메인 페이로드에 헤더와 객체 리스트 추가
+DisplayFormPayload payload = new DisplayFormPayload();
+payload.setFormHeader(header);
+payload.setObjects(List.of(text));
+
+// 4. 페이로드를 포함한 최종 패킷 생성
+VmsPacket&lt;DisplayFormPayload&gt; requestPacket = new VmsPacket&lt;&gt;();
+requestPacket.setOpcode(OpCode.DOWNLOAD_FORM); // 0x0E
+requestPacket.setData(payload);
+// ... 공통 헤더 정보 설정
+</code></pre>
+
+        <h3>VMS ➔ 서버: 응답</h3>
+        <p>VMS는 폼 데이터를 성공적으로 수신 및 저장하면 ACK로, 실패하면 NAK로 응답합니다.</p>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>

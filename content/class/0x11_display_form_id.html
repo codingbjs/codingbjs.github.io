@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x11 Display Form ID</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x11: Display Form ID</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            센터에서 VMS 장비에 미리 다운로드된(<code>0x0E</code> 명령어로 저장된) 폼을 ID로 지정하여 즉시 표출하도록 지시하는 명령어입니다. 이 방식은 전체 폼 데이터를 매번 전송하는 것보다 훨씬 효율적입니다. 만약 VMS에 해당 ID의 폼이 없으면 NAK로 응답하고 공백 문안을 표출해야 합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            서버의 요청에는 표출할 폼의 ID를 담는 전용 페이로드 클래스가 필요합니다. VMS의 응답은 단순 ACK/NAK이므로 별도의 응답 페이로드 클래스는 없습니다.
+        </p>
+
+        <h3>1. DisplayFormByIdPayload.java (요청 페이로드)</h3>
+        <p>
+            서버가 VMS로 보내는 요청 패킷의 <code>data</code> 필드에 사용됩니다. 표출할 폼의 ID 정보를 담습니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload.request;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OP-CODE 0x11 (Display Form ID)의 '요청'을 위한 페이로드 클래스입니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DisplayFormByIdPayload {
+
+    /**
+     * 표출할 폼의 숫자 ID (2 Bytes)
+     */
+    private int formId;
+}
+</code></pre>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>1. 서버 ➔ VMS: ID가 201번인 폼 표출 요청</h3>
+        <pre><code class="language-java">
+// 1. 표출할 폼 ID를 담은 요청 페이로드 생성
+DisplayFormByIdPayload payload = new DisplayFormByIdPayload(201);
+
+// 2. 페이로드를 포함한 요청 패킷 생성
+VmsPacket&lt;DisplayFormByIdPayload&gt; requestPacket = new VmsPacket&lt;&gt;();
+requestPacket.setOpcode(OpCode.DISPLAY_FORM_ID); // 0x11
+requestPacket.setData(payload);
+// ... 공통 헤더 정보 설정
+</code></pre>
+
+        <h3>2. VMS ➔ 서버: 응답</h3>
+        <p>VMS는 명령을 성공적으로 수행하면 ACK로, 해당 ID의 폼이 없거나 실패하면 NAK로 응답합니다.</p>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>

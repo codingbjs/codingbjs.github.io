@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS 명세 - 0x13 SignBoard Alarm Control</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<main class="container">
+    <h1>0x13: SignBoard Alarm Control (터널)</h1>
+
+    <section id="description">
+        <h2>a. 기능 설명</h2>
+        <p>
+            터널용으로 특화된 명령어로, 센터에서 VMS 장비의 경광등(Alarm)이나 스피커(Speaker)를 원격으로 켜거나 끌 때 사용합니다. VMS는 이 제어 요청을 수신하면 성공/실패 여부를 ACK/NAK로 응답합니다.
+        </p>
+    </section>
+
+    <section id="payload-class">
+        <h2>b. 관련 클래스 설계</h2>
+        <p>
+            서버의 요청에는 어떤 동작을 수행할지 명시하는 제어 코드가 필요합니다. 이 코드를 타입 안전하게 관리하기 위해 Enum 클래스를 사용합니다.
+        </p>
+
+        <h3>1. AlarmControlType.java (Enum)</h3>
+        <p>
+            요청 페이로드에 포함될 제어 동작의 종류를 정의하는 열거형 클래스입니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.code.control;
+
+import lombok.Getter;
+import java.util.Arrays;
+
+@Getter
+public enum AlarmControlType {
+    ALARM_OFF   ((byte) 0x00),
+    ALARM_ON    ((byte) 0x01),
+    SPEAKER_OFF ((byte) 0x02),
+    SPEAKER_ON  ((byte) 0x03);
+
+    private final byte code;
+
+    AlarmControlType(byte code) {
+        this.code = code;
+    }
+
+    public static AlarmControlType fromByte(byte code) {
+        return Arrays.stream(values())
+                .filter(type -> type.code == code)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown AlarmControlType code: " + code));
+    }
+}
+</code></pre>
+
+        <h3>2. SignBoardAlarmControlPayload.java (요청 페이로드)</h3>
+        <p>
+            서버가 VMS로 보내는 요청 패킷의 <code>data</code> 필드에 사용됩니다. 수행할 제어 동작의 종류를 담습니다.
+        </p>
+        <pre><code class="language-java">package com.vms.protocol.payload.request;
+
+import com.vms.protocol.code.control.AlarmControlType;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * OP-CODE 0x13 (SignBoard Alarm Control)의 '요청'을 위한 페이로드 클래스입니다.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SignBoardAlarmControlPayload {
+
+    /**
+     * 수행할 제어 동작의 종류 (1 Byte)
+     */
+    private AlarmControlType controlType;
+}
+</code></pre>
+    </section>
+
+    <section id="usage-example">
+        <h2>c. 패킷 생성 예시</h2>
+        <h3>1. 서버 ➔ VMS: 경광등(Alarm) 켜기 요청</h3>
+        <pre><code class="language-java">
+// 1. '경광등 켜기' 동작을 담은 요청 페이로드 생성
+SignBoardAlarmControlPayload payload = new SignBoardAlarmControlPayload(AlarmControlType.ALARM_ON);
+
+// 2. 페이로드를 포함한 요청 패킷 생성
+VmsPacket&lt;SignBoardAlarmControlPayload&gt; requestPacket = new VmsPacket&lt;&gt;();
+requestPacket.setOpcode(OpCode.SIGNBOARD_ALARM_CONTROL); // 0x13
+requestPacket.setData(payload);
+// ... 공통 헤더 정보 설정
+</code></pre>
+
+        <h3>2. VMS ➔ 서버: 응답</h3>
+        <p>VMS는 명령을 성공적으로 수행하면 ACK로, 실패하면 NAK로 응답합니다. 별도의 응답 페이로드는 필요하지 않습니다.</p>
+    </section>
+
+</main>
+
+<footer>
+    <p>&copy; 2025 VMS Interface Specification. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="../../script/script.js"></script>
+</body>
+</html>
