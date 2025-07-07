@@ -78,10 +78,35 @@ public abstract class VmsObject {
     public abstract ObjectType getObjectType();
 }</code></pre>
 
-        <h3>4. 구현 클래스 예시: TextObject.java</h3>
-        <pre><code class="language-java">package com.vms.protocol.payload.vms.object.text;
+        <h3>4. 객체 타입 Enum: ObjectType.java</h3>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
 
-import com.vms.protocol.payload.vms.object.VmsObject;
+import lombok.Getter;
+import java.util.Arrays;
+
+@Getter
+public enum ObjectType {
+    TEXT        ((byte) 0x00, "문자열"),
+    BITMAP      ((byte) 0x01, "비트맵 데이터"),
+    BITMAP_ID   ((byte) 0x02, "비트맵 ID"),
+    CCTV_URL    ((byte) 0x03, "CCTV URL"),
+    MOVIE_ID    ((byte) 0x04, "동영상 ID");
+
+    private final byte code;
+    private final String description;
+
+    ObjectType(byte code, String description) { this.code = code; this.description = description; }
+
+    public static ObjectType fromCode(byte code) {
+        return Arrays.stream(values()).filter(type -> type.code == code).findFirst().orElseThrow();
+    }
+}</code></pre>
+
+        <h3>5. 구현 클래스 목록</h3>
+
+        <h4>TextObject.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -94,6 +119,85 @@ public class TextObject extends VmsObject {
     @Override
     public ObjectType getObjectType() {
         return ObjectType.TEXT;
+    }
+}</code></pre>
+
+        <h4>BitmapObject.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class BitmapObject extends VmsObject {
+    private int width;
+    private int height;
+    private byte imageType;
+    private byte[] bitmapData;
+
+    @Override
+    public ObjectType getObjectType() {
+        return ObjectType.BITMAP;
+    }
+}</code></pre>
+
+        <h4>BitmapIdObject.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class BitmapIdObject extends VmsObject {
+    private int width;
+    private int height;
+    private byte imageType;
+    private int bitmapId;
+
+    @Override
+    public ObjectType getObjectType() {
+        return ObjectType.BITMAP_ID;
+    }
+}</code></pre>
+
+        <h4>CctvUrlObject.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class CctvUrlObject extends VmsObject {
+    private int width;
+    private int height;
+    private String cctvUrl;
+
+    @Override
+    public ObjectType getObjectType() {
+        return ObjectType.CCTV_URL;
+    }
+}</code></pre>
+
+        <h4>MovieIdObject.java</h4>
+        <pre><code class="language-java">package com.vms.protocol.payload.vms.object;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class MovieIdObject extends VmsObject {
+    private int width;
+    private int height;
+    private byte videoType;
+    private int movieId;
+
+    @Override
+    public ObjectType getObjectType() {
+        return ObjectType.MOVIE_ID;
     }
 }</code></pre>
     </section>
