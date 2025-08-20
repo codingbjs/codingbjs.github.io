@@ -25,6 +25,13 @@
       background: #cbd5e0; cursor: pointer; border-radius: 50%;
     }
     #canvas { cursor: default; }
+
+    /* 아코디언 스타일 */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-200 flex flex-col h-screen antialiased">
@@ -35,87 +42,114 @@
 
 <div class="flex-grow flex flex-col lg:flex-row overflow-hidden">
 
-  <aside class="w-full lg:w-80 bg-gray-800 p-6 space-y-6 overflow-y-auto custom-scrollbar">
-    <!-- 파일 관리 -->
-    <div>
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2">파일 관리</h2>
-      <div class="space-y-3">
-        <label for="imageLoader" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer transition duration-300 block">
-          이미지 추가
-        </label>
-        <input type="file" id="imageLoader" class="hidden" accept="image/*" multiple/>
-        <button id="downloadBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-          이미지 다운로드
-        </button>
-      </div>
-    </div>
+  <aside class="w-full lg:w-80 bg-gray-800 p-4 space-y-1 overflow-y-auto custom-scrollbar">
 
-    <!-- 레이어 관리 -->
-    <div>
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2">레이어</h2>
-      <div class="grid grid-cols-2 gap-3">
-        <button id="bringForward" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>앞으로</button>
-        <button id="sendBackward" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>뒤로</button>
-        <button id="bringToFront" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 앞으로</button>
-        <button id="sendToBack" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 뒤로</button>
-      </div>
-    </div>
-
-    <!-- 필터 -->
-    <div>
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2">필터</h2>
-      <div class="grid grid-cols-2 gap-3">
-        <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="grayscale" disabled>흑백</button>
-        <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="sepia" disabled>세피아</button>
-        <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="invert" disabled>반전</button>
-        <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="blur" disabled>블러</button>
-      </div>
-    </div>
-
-    <!-- 조정 -->
-    <div>
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2">조정</h2>
-      <div class="space-y-4">
-        <div>
-          <label for="brightness" class="mb-2 flex justify-between">밝기 <span id="brightnessValue">100</span>%</label>
-          <input type="range" id="brightness" class="slider" min="0" max="200" value="100" disabled>
-        </div>
-        <div>
-          <label for="contrast" class="mb-2 flex justify-between">대비 <span id="contrastValue">100</span>%</label>
-          <input type="range" id="contrast" class="slider" min="0" max="200" value="100" disabled>
-        </div>
-        <!-- 투명도 슬라이더 추가 -->
-        <div>
-          <label for="opacity" class="mb-2 flex justify-between">투명도 <span id="opacityValue">100</span>%</label>
-          <input type="range" id="opacity" class="slider" min="0" max="100" value="100" disabled>
-        </div>
-      </div>
-    </div>
-
-    <!-- 변형 -->
-    <div>
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2">변형</h2>
-      <div class="grid grid-cols-2 gap-3">
-        <button id="rotateLeft" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌회전</button>
-        <button id="rotateRight" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>우회전</button>
-        <button id="flipHorizontal" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌우 반전</button>
-        <button id="flipVertical" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>상하 반전</button>
-      </div>
-    </div>
-
-    <!-- 초기화 & 삭제 -->
-    <div>
-      <button id="resetBtn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 mb-3" disabled>
-        선택 이미지 초기화
+    <!-- 아코디언 메뉴 구조로 변경 -->
+    <div class="accordion-item border-b border-gray-700">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition rounded-t-lg">
+        <span>파일 관리</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
-      <button id="deleteBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>
-        선택 이미지 삭제
+      <div class="accordion-content">
+        <div class="p-4 space-y-3">
+          <label for="imageLoader" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer transition duration-300 block">
+            이미지 추가
+          </label>
+          <input type="file" id="imageLoader" class="hidden" accept="image/*" multiple/>
+          <button id="downloadBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+            이미지 다운로드
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border-b border-gray-700">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
+        <span>레이어</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
+      <div class="accordion-content">
+        <div class="p-4 grid grid-cols-2 gap-3">
+          <button id="bringForward" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>앞으로</button>
+          <button id="sendBackward" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>뒤로</button>
+          <button id="bringToFront" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 앞으로</button>
+          <button id="sendToBack" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 뒤로</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border-b border-gray-700">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
+        <span>필터</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="p-4 grid grid-cols-2 gap-3">
+          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="grayscale" disabled>흑백</button>
+          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="sepia" disabled>세피아</button>
+          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="invert" disabled>반전</button>
+          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="blur" disabled>블러</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border-b border-gray-700">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
+        <span>조정</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="p-4 space-y-4">
+          <div>
+            <label for="brightness" class="mb-2 flex justify-between">밝기 <span id="brightnessValue">100</span>%</label>
+            <input type="range" id="brightness" class="slider" min="0" max="200" value="100" disabled>
+          </div>
+          <div>
+            <label for="contrast" class="mb-2 flex justify-between">대비 <span id="contrastValue">100</span>%</label>
+            <input type="range" id="contrast" class="slider" min="0" max="200" value="100" disabled>
+          </div>
+          <div>
+            <label for="opacity" class="mb-2 flex justify-between">투명도 <span id="opacityValue">100</span>%</label>
+            <input type="range" id="opacity" class="slider" min="0" max="100" value="100" disabled>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border-b border-gray-700">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
+        <span>변형</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="p-4 grid grid-cols-2 gap-3">
+          <button id="rotateLeft" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌회전</button>
+          <button id="rotateRight" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>우회전</button>
+          <button id="flipHorizontal" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌우 반전</button>
+          <button id="flipVertical" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>상하 반전</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition rounded-b-lg">
+        <span>편집</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="p-4 space-y-3">
+          <button id="resetBtn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>
+            선택 이미지 초기화
+          </button>
+          <button id="deleteBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>
+            선택 이미지 삭제
+          </button>
+        </div>
+      </div>
     </div>
   </aside>
 
   <main class="flex-grow bg-gray-700 flex items-center justify-center p-4 overflow-hidden relative" id="canvas-container">
-    <!-- 드래그 앤 드롭 오버레이 추가 -->
     <div id="drop-overlay" class="hidden absolute inset-0 bg-gray-900 bg-opacity-75 border-4 border-dashed border-indigo-500 flex items-center justify-center text-2xl font-bold pointer-events-none z-20">
       <p>여기에 이미지를 드롭하세요</p>
     </div>
@@ -159,16 +193,12 @@
 
     images.forEach(imgObj => {
       ctx.save();
-
       ctx.globalAlpha = imgObj.opacity;
-
       const f = imgObj.filters;
       ctx.filter = `grayscale(${f.grayscale}) sepia(${f.sepia}) invert(${f.invert}) blur(${f.blur}px) brightness(${f.brightness}%) contrast(${f.contrast}%)`;
-
       ctx.translate(imgObj.x + imgObj.width / 2, imgObj.y + imgObj.height / 2);
       ctx.rotate(imgObj.rotation * Math.PI / 180);
       ctx.scale(imgObj.flip.h, imgObj.flip.v);
-
       ctx.drawImage(imgObj.img, -imgObj.width / 2, -imgObj.height / 2, imgObj.width, imgObj.height);
       ctx.restore();
     });
@@ -182,38 +212,31 @@
     ctx.save();
     ctx.translate(imgObj.x + imgObj.width / 2, imgObj.y + imgObj.height / 2);
     ctx.rotate(imgObj.rotation * Math.PI / 180);
-
     const w = imgObj.width;
     const h = imgObj.height;
-
     ctx.strokeStyle = '#007bff';
     ctx.lineWidth = 2;
     ctx.strokeRect(-w / 2, -h / 2, w, h);
-
     ctx.fillStyle = '#007bff';
     const handleSize = 8;
     const halfHandle = handleSize / 2;
-
-    ctx.fillRect(-w/2 - halfHandle, -h/2 - halfHandle, handleSize, handleSize); // tl
-    ctx.fillRect(w/2 - halfHandle, -h/2 - halfHandle, handleSize, handleSize); // tr
-    ctx.fillRect(-w/2 - halfHandle, h/2 - halfHandle, handleSize, handleSize); // bl
-    ctx.fillRect(w/2 - halfHandle, h/2 - halfHandle, handleSize, handleSize); // br
-    ctx.fillRect(-halfHandle, -h/2 - halfHandle, handleSize, handleSize); // t
-    ctx.fillRect(-halfHandle, h/2 - halfHandle, handleSize, handleSize); // b
-    ctx.fillRect(-w/2 - halfHandle, -halfHandle, handleSize, handleSize); // l
-    ctx.fillRect(w/2 - halfHandle, -halfHandle, handleSize, handleSize); // r
-
+    ctx.fillRect(-w/2 - halfHandle, -h/2 - halfHandle, handleSize, handleSize);
+    ctx.fillRect(w/2 - halfHandle, -h/2 - halfHandle, handleSize, handleSize);
+    ctx.fillRect(-w/2 - halfHandle, h/2 - halfHandle, handleSize, handleSize);
+    ctx.fillRect(w/2 - halfHandle, h/2 - halfHandle, handleSize, handleSize);
+    ctx.fillRect(-halfHandle, -h/2 - halfHandle, handleSize, handleSize);
+    ctx.fillRect(-halfHandle, h/2 - halfHandle, handleSize, handleSize);
+    ctx.fillRect(-w/2 - halfHandle, -halfHandle, handleSize, handleSize);
+    ctx.fillRect(w/2 - halfHandle, -halfHandle, handleSize, handleSize);
     ctx.restore();
   }
 
   // --- 컨트롤 UI 업데이트 ---
   function updateControls() {
     const hasSelection = selectedImage != null;
-
     document.querySelectorAll('.layer-btn, .filter-btn, .slider, .transform-btn, #resetBtn, #deleteBtn').forEach(el => {
       el.disabled = !hasSelection;
     });
-
     if (hasSelection) {
       document.querySelectorAll('.filter-btn').forEach(btn => {
         const filter = btn.dataset.filter;
@@ -254,7 +277,6 @@
     const bottom = imgObj.y + imgObj.height;
     const midX = imgObj.x + imgObj.width / 2;
     const midY = imgObj.y + imgObj.height / 2;
-
     if (Math.abs(x - left) < handleSize && Math.abs(y - top) < handleSize) return 'tl';
     if (Math.abs(x - right) < handleSize && Math.abs(y - top) < handleSize) return 'tr';
     if (Math.abs(x - left) < handleSize && Math.abs(y - bottom) < handleSize) return 'bl';
@@ -275,17 +297,11 @@
         const img = new Image();
         img.onload = () => {
           const newImageObj = {
-            id: Date.now(),
-            img: img,
-            x: (canvas.width - img.width * 0.5) / 2,
-            y: (canvas.height - img.height * 0.5) / 2,
-            width: img.width * 0.5,
-            height: img.height * 0.5,
-            rotation: 0,
-            flip: { h: 1, v: 1 },
-            filters: createDefaultFilters(),
-            opacity: 1,
-            zIndex: nextZIndex++,
+            id: Date.now(), img: img,
+            x: (canvas.width - img.width * 0.5) / 2, y: (canvas.height - img.height * 0.5) / 2,
+            width: img.width * 0.5, height: img.height * 0.5,
+            rotation: 0, flip: { h: 1, v: 1 },
+            filters: createDefaultFilters(), opacity: 1, zIndex: nextZIndex++,
           };
           images.push(newImageObj);
           selectedImage = newImageObj;
@@ -299,90 +315,40 @@
   }
 
   // --- 이벤트 리스너 ---
-  document.getElementById('imageLoader').addEventListener('change', (e) => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-
+  document.getElementById('imageLoader').addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
   canvasContainer.addEventListener('dragenter', (e) => { e.preventDefault(); e.stopPropagation(); dropOverlay.classList.remove('hidden'); });
   canvasContainer.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
-  canvasContainer.addEventListener('dragleave', (e) => {
-    e.preventDefault(); e.stopPropagation();
-    if (e.relatedTarget === null || !canvasContainer.contains(e.relatedTarget)) {
-      dropOverlay.classList.add('hidden');
-    }
-  });
-  canvasContainer.addEventListener('drop', (e) => {
-    e.preventDefault(); e.stopPropagation();
-    dropOverlay.classList.add('hidden');
-    handleFiles(e.dataTransfer.files);
-  });
+  canvasContainer.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget === null || !canvasContainer.contains(e.relatedTarget)) { dropOverlay.classList.add('hidden'); } });
+  canvasContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); dropOverlay.classList.add('hidden'); handleFiles(e.dataTransfer.files); });
 
-  // 캔버스 마우스 이벤트 (오류 수정된 부분)
   canvas.addEventListener('mousedown', (e) => {
     const { x, y } = getMousePos(e);
-    dragStartX = x;
-    dragStartY = y;
-
-    // 1. 클릭된 최상단 이미지를 먼저 찾습니다.
+    dragStartX = x; dragStartY = y;
     let clickedImage = null;
-    for (let i = images.length - 1; i >= 0; i--) {
-      if (isPointInImage(x, y, images[i])) {
-        clickedImage = images[i];
-        break;
-      }
-    }
-
-    // 2. 찾은 이미지를 기반으로 동작을 결정합니다.
+    for (let i = images.length - 1; i >= 0; i--) { if (isPointInImage(x, y, images[i])) { clickedImage = images[i]; break; } }
     if (clickedImage) {
-      // 클릭된 이미지가 현재 선택된 이미지가 아니라면, 선택을 변경합니다.
-      if (clickedImage !== selectedImage) {
-        selectedImage = clickedImage;
-      }
-
-      // 클릭된 이미지를 가장 앞으로 가져옵니다.
+      if (clickedImage !== selectedImage) { selectedImage = clickedImage; }
       selectedImage.zIndex = nextZIndex++;
-
-      // 3. 선택된 이미 위에서 리사이즈 핸들을 클릭했는지 확인합니다.
       resizeHandle = getResizeHandle(x, y, selectedImage);
-      if (resizeHandle) {
-        isResizing = true;
-        isDragging = false;
-      } else {
-        // 핸들이 아니라면 드래그 모드로 설정합니다.
-        isResizing = false;
-        isDragging = true;
-      }
-    } else {
-      // 빈 공간을 클릭했다면 모든 선택을 해제합니다.
-      selectedImage = null;
-      isDragging = false;
-      isResizing = false;
-    }
-
-    // UI를 업데이트하고 캔버스를 다시 그립니다.
+      if (resizeHandle) { isResizing = true; isDragging = false; } else { isResizing = false; isDragging = true; }
+    } else { selectedImage = null; isDragging = false; isResizing = false; }
     updateControls();
     drawCanvas();
   });
 
   canvas.addEventListener('mousemove', (e) => {
     const { x, y } = getMousePos(e);
-    const dx = x - dragStartX;
-    const dy = y - dragStartY;
-
+    const dx = x - dragStartX; const dy = y - dragStartY;
     if (isResizing && selectedImage) {
       if (resizeHandle.includes('r')) selectedImage.width += dx;
       if (resizeHandle.includes('l')) { selectedImage.width -= dx; selectedImage.x += dx; }
       if (resizeHandle.includes('b')) selectedImage.height += dy;
       if (resizeHandle.includes('t')) { selectedImage.height -= dy; selectedImage.y += dy; }
-      dragStartX = x;
-      dragStartY = y;
+      dragStartX = x; dragStartY = y;
       drawCanvas();
     } else if (isDragging && selectedImage) {
-      selectedImage.x += dx;
-      selectedImage.y += dy;
-      dragStartX = x;
-      dragStartY = y;
+      selectedImage.x += dx; selectedImage.y += dy;
+      dragStartX = x; dragStartY = y;
       drawCanvas();
     } else {
       let onHandle = selectedImage && getResizeHandle(x, y, selectedImage);
@@ -396,93 +362,44 @@
   canvas.addEventListener('mouseup', () => { isDragging = false; isResizing = false; resizeHandle = null; });
   canvas.addEventListener('mouseout', () => { isDragging = false; isResizing = false; resizeHandle = null; });
 
-  document.getElementById('bringForward').addEventListener('click', () => {
-    if (!selectedImage) return;
-    const sorted = [...images].sort((a,b) => a.zIndex - b.zIndex);
-    const currentIndex = sorted.findIndex(img => img.id === selectedImage.id);
-    if (currentIndex < sorted.length - 1) {
-      const nextImg = sorted[currentIndex + 1];
-      [selectedImage.zIndex, nextImg.zIndex] = [nextImg.zIndex, selectedImage.zIndex];
-    }
-    drawCanvas();
-  });
-  document.getElementById('sendBackward').addEventListener('click', () => {
-    if (!selectedImage) return;
-    const sorted = [...images].sort((a,b) => a.zIndex - b.zIndex);
-    const currentIndex = sorted.findIndex(img => img.id === selectedImage.id);
-    if (currentIndex > 0) {
-      const prevImg = sorted[currentIndex - 1];
-      [selectedImage.zIndex, prevImg.zIndex] = [prevImg.zIndex, selectedImage.zIndex];
-    }
-    drawCanvas();
-  });
+  document.getElementById('bringForward').addEventListener('click', () => { if (!selectedImage) return; const sorted = [...images].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(img => img.id === selectedImage.id); if (currentIndex < sorted.length - 1) { const nextImg = sorted[currentIndex + 1]; [selectedImage.zIndex, nextImg.zIndex] = [nextImg.zIndex, selectedImage.zIndex]; } drawCanvas(); });
+  document.getElementById('sendBackward').addEventListener('click', () => { if (!selectedImage) return; const sorted = [...images].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(img => img.id === selectedImage.id); if (currentIndex > 0) { const prevImg = sorted[currentIndex - 1]; [selectedImage.zIndex, prevImg.zIndex] = [prevImg.zIndex, selectedImage.zIndex]; } drawCanvas(); });
   document.getElementById('bringToFront').addEventListener('click', () => { if (selectedImage) selectedImage.zIndex = nextZIndex++; drawCanvas(); });
-  document.getElementById('sendToBack').addEventListener('click', () => {
-    if (selectedImage) {
-      const minZ = Math.min(...images.map(i => i.zIndex));
-      selectedImage.zIndex = minZ - 1;
-    }
-    drawCanvas();
-  });
-
-  document.querySelectorAll('.filter-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      if (!selectedImage) return;
-      const filter = button.dataset.filter;
-      const f = selectedImage.filters;
-      if (filter === 'blur') f.blur = f.blur > 0 ? 0 : 3;
-      else f[filter] = f[filter] > 0 ? 0 : 1;
-      updateControls();
-      drawCanvas();
-    });
-  });
-
-  document.querySelectorAll('.slider').forEach(slider => {
-    slider.addEventListener('input', (e) => {
-      if (!selectedImage) return;
-      const { id, value } = e.target;
-      if (id === 'opacity') {
-        selectedImage.opacity = value / 100;
-      } else {
-        selectedImage.filters[id] = value;
-      }
-      document.getElementById(`${id}Value`).innerText = value;
-      drawCanvas();
-    });
-  });
-
+  document.getElementById('sendToBack').addEventListener('click', () => { if (selectedImage) { const minZ = Math.min(...images.map(i => i.zIndex)); selectedImage.zIndex = minZ - 1; } drawCanvas(); });
+  document.querySelectorAll('.filter-btn').forEach(button => { button.addEventListener('click', () => { if (!selectedImage) return; const filter = button.dataset.filter; const f = selectedImage.filters; if (filter === 'blur') f.blur = f.blur > 0 ? 0 : 3; else f[filter] = f[filter] > 0 ? 0 : 1; updateControls(); drawCanvas(); }); });
+  document.querySelectorAll('.slider').forEach(slider => { slider.addEventListener('input', (e) => { if (!selectedImage) return; const { id, value } = e.target; if (id === 'opacity') { selectedImage.opacity = value / 100; } else { selectedImage.filters[id] = value; } document.getElementById(`${id}Value`).innerText = value; drawCanvas(); }); });
   document.getElementById('rotateLeft').addEventListener('click', () => { if (selectedImage) selectedImage.rotation -= 90; drawCanvas(); });
   document.getElementById('rotateRight').addEventListener('click', () => { if (selectedImage) selectedImage.rotation += 90; drawCanvas(); });
   document.getElementById('flipHorizontal').addEventListener('click', () => { if (selectedImage) selectedImage.flip.h *= -1; drawCanvas(); });
   document.getElementById('flipVertical').addEventListener('click', () => { if (selectedImage) selectedImage.flip.v *= -1; drawCanvas(); });
+  document.getElementById('resetBtn').addEventListener('click', () => { if (!selectedImage) return; selectedImage.filters = createDefaultFilters(); selectedImage.rotation = 0; selectedImage.flip = { h: 1, v: 1 }; selectedImage.opacity = 1; updateControls(); drawCanvas(); });
+  document.getElementById('deleteBtn').addEventListener('click', () => { if (!selectedImage) return; images = images.filter(img => img.id !== selectedImage.id); selectedImage = null; updateControls(); drawCanvas(); });
+  document.getElementById('downloadBtn').addEventListener('click', () => { const tempSelected = selectedImage; selectedImage = null; drawCanvas(); const link = document.createElement('a'); link.download = 'canvas-image.png'; link.href = canvas.toDataURL('image/png'); link.click(); selectedImage = tempSelected; drawCanvas(); });
 
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    if (!selectedImage) return;
-    selectedImage.filters = createDefaultFilters();
-    selectedImage.rotation = 0;
-    selectedImage.flip = { h: 1, v: 1 };
-    selectedImage.opacity = 1;
-    updateControls();
-    drawCanvas();
-  });
-  document.getElementById('deleteBtn').addEventListener('click', () => {
-    if (!selectedImage) return;
-    images = images.filter(img => img.id !== selectedImage.id);
-    selectedImage = null;
-    updateControls();
-    drawCanvas();
-  });
+  // --- 아코디언 메뉴 로직 추가 ---
+  const accordionHeaders = document.querySelectorAll('.accordion-header');
+  accordionHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const content = header.nextElementSibling;
+      const icon = header.querySelector('.accordion-icon');
 
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    const tempSelected = selectedImage;
-    selectedImage = null;
-    drawCanvas();
-    const link = document.createElement('a');
-    link.download = 'canvas-image.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    selectedImage = tempSelected;
-    drawCanvas();
+      // 다른 열려있는 메뉴 닫기
+      accordionHeaders.forEach(otherHeader => {
+        if (otherHeader !== header) {
+          otherHeader.nextElementSibling.style.maxHeight = null;
+          otherHeader.querySelector('.accordion-icon').classList.remove('rotate-180');
+        }
+      });
+
+      // 현재 메뉴 토글
+      if (content.style.maxHeight) {
+        content.style.maxHeight = null;
+        icon.classList.remove('rotate-180');
+      } else {
+        content.style.maxHeight = content.scrollHeight + "px";
+        icon.classList.add('rotate-180');
+      }
+    });
   });
 
   // --- 초기화 ---
@@ -491,3 +408,4 @@
 </script>
 </body>
 </html>
+
