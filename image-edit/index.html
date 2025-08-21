@@ -304,15 +304,32 @@
   function drawCropUI() {
     if (!selectedObject) return;
     ctx.save();
-    // 자르기 영역 바깥은 그대로 두고,
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // 반투명 흰색
-    ctx.fillRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+    // 캔버스 전체에 반투명한 어두운 오버레이를 그립니다.
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 자르기 영역 테두리를 점선으로 그립니다.
+    // 'destination-out'을 사용하여 자르기 영역을 "뚫어" 원본 이미지가 보이게 합니다.
+    ctx.globalCompositeOperation = 'destination-out';
+    // ctx.fillStyle = 'white'; // 색상은 중요하지 않음, 영역을 지우는 용도
+    ctx.fillRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+    ctx.restore(); // globalCompositeOperation을 초기화합니다.
+
+    // 자르기 영역 테두리를 점선으로 그리고 핸들도 추가합니다.
+    ctx.save();
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.strokeRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+
+    // 핸들 그리기
+    ctx.fillStyle = '#ffffff';
+    ctx.setLineDash([]); // 핸들은 실선으로
+    const handleSize = 10;
+    const halfHandle = handleSize / 2;
+    ctx.fillRect(cropBox.x - halfHandle, cropBox.y - halfHandle, handleSize, handleSize); // tl
+    ctx.fillRect(cropBox.x + cropBox.width - halfHandle, cropBox.y - halfHandle, handleSize, handleSize); // tr
+    ctx.fillRect(cropBox.x - halfHandle, cropBox.y + cropBox.height - halfHandle, handleSize, handleSize); // bl
+    ctx.fillRect(cropBox.x + cropBox.width - halfHandle, cropBox.y + cropBox.height - halfHandle, handleSize, handleSize); // br
     ctx.restore();
   }
 
