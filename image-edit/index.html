@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>멀티-레이어 포토샵 앱</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Do+Hyeon&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
@@ -14,7 +16,7 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: #2d3748; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #718096; }
-    button:disabled { cursor: not-allowed; opacity: 0.5; }
+    button:disabled, input:disabled { cursor: not-allowed; opacity: 0.5; }
     input[type="range"] {
       -webkit-appearance: none; appearance: none; width: 100%; height: 8px;
       background: #4a5568; border-radius: 5px; outline: none; opacity: 0.7; transition: opacity .2s;
@@ -25,12 +27,30 @@
       background: #cbd5e0; cursor: pointer; border-radius: 50%;
     }
     #canvas { cursor: default; }
-
-    /* 아코디언 스타일 */
     .accordion-content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease-in-out;
+    }
+    .color-picker-wrapper {
+      position: relative;
+      width: 28px;
+      height: 28px;
+    }
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .color-picker-wrapper .color-display {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #4a5568;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -44,109 +64,134 @@
 
   <aside class="w-full lg:w-80 bg-gray-800 p-4 space-y-1 overflow-y-auto custom-scrollbar">
 
-    <!-- 아코디언 메뉴 구조로 변경 -->
-    <div class="accordion-item border-b border-gray-700">
+    <!-- 이미지 아코디언 -->
+    <div id="image-accordion" class="accordion-item border-b border-gray-700">
       <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition rounded-t-lg">
-        <span>파일 관리</span>
-        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-      </button>
-      <div class="accordion-content">
-        <div class="p-4 space-y-3">
-          <label for="imageLoader" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer transition duration-300 block">
-            이미지 추가
-          </label>
-          <input type="file" id="imageLoader" class="hidden" accept="image/*" multiple/>
-          <button id="downloadBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-            이미지 다운로드
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="accordion-item border-b border-gray-700">
-      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
-        <span>레이어</span>
-        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-      </button>
-      <div class="accordion-content">
-        <div class="p-4 grid grid-cols-2 gap-3">
-          <button id="bringForward" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>앞으로</button>
-          <button id="sendBackward" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>뒤로</button>
-          <button id="bringToFront" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 앞으로</button>
-          <button id="sendToBack" class="layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 뒤로</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="accordion-item border-b border-gray-700">
-      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
-        <span>필터</span>
-        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-      </button>
-      <div class="accordion-content">
-        <div class="p-4 grid grid-cols-2 gap-3">
-          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="grayscale" disabled>흑백</button>
-          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="sepia" disabled>세피아</button>
-          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="invert" disabled>반전</button>
-          <button class="filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="blur" disabled>블러</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="accordion-item border-b border-gray-700">
-      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
-        <span>조정</span>
-        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        <span>이미지</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
       <div class="accordion-content">
         <div class="p-4 space-y-4">
-          <div>
-            <label for="brightness" class="mb-2 flex justify-between">밝기 <span id="brightnessValue">100</span>%</label>
-            <input type="range" id="brightness" class="slider" min="0" max="200" value="100" disabled>
+          <label for="imageLoader" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer transition">이미지 추가</label>
+          <input type="file" id="imageLoader" class="hidden" accept="image/*" multiple/>
+
+          <h3 class="font-semibold pt-2 border-t border-gray-600">레이어</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="bringForward" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>앞으로</button>
+            <button id="sendBackward" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>뒤로</button>
+            <button id="bringToFront" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 앞으로</button>
+            <button id="sendToBack" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 뒤로</button>
           </div>
-          <div>
-            <label for="contrast" class="mb-2 flex justify-between">대비 <span id="contrastValue">100</span>%</label>
-            <input type="range" id="contrast" class="slider" min="0" max="200" value="100" disabled>
+
+          <h3 class="font-semibold pt-2 border-t border-gray-600">필터</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="grayscale" disabled>흑백</button>
+            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="sepia" disabled>세피아</button>
+            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="invert" disabled>반전</button>
+            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="blur" disabled>블러</button>
           </div>
-          <div>
-            <label for="opacity" class="mb-2 flex justify-between">투명도 <span id="opacityValue">100</span>%</label>
-            <input type="range" id="opacity" class="slider" min="0" max="100" value="100" disabled>
+
+          <h3 class="font-semibold pt-2 border-t border-gray-600">조정</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="mb-2 flex justify-between">밝기 <span id="brightnessValue">100</span>%</label>
+              <input type="range" id="brightness" class="image-control slider" min="0" max="200" value="100" disabled>
+            </div>
+            <div>
+              <label class="mb-2 flex justify-between">대비 <span id="contrastValue">100</span>%</label>
+              <input type="range" id="contrast" class="image-control slider" min="0" max="200" value="100" disabled>
+            </div>
+            <div>
+              <label class="mb-2 flex justify-between">투명도 <span id="opacityValue">100</span>%</label>
+              <input type="range" id="opacity" class="general-selection-control slider" min="0" max="100" value="100" disabled>
+            </div>
+          </div>
+
+          <h3 class="font-semibold pt-2 border-t border-gray-600">변형</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="rotateLeft" class="general-selection-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌회전</button>
+            <button id="rotateRight" class="general-selection-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>우회전</button>
+            <button id="flipHorizontal" class="image-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌우 반전</button>
+            <button id="flipVertical" class="image-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>상하 반전</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="accordion-item border-b border-gray-700">
+    <!-- 텍스트 아코디언 -->
+    <div id="text-accordion" class="accordion-item border-b border-gray-700">
       <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
-        <span>변형</span>
-        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        <span>텍스트</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
       <div class="accordion-content">
-        <div class="p-4 grid grid-cols-2 gap-3">
-          <button id="rotateLeft" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌회전</button>
-          <button id="rotateRight" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>우회전</button>
-          <button id="flipHorizontal" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌우 반전</button>
-          <button id="flipVertical" class="transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>상하 반전</button>
+        <div class="p-4 space-y-4">
+          <button id="addTextBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">텍스트 추가</button>
+
+          <h3 class="font-semibold pt-2 border-t border-gray-600">텍스트 설정</h3>
+          <input type="text" id="textInput" class="text-control w-full bg-gray-700 border border-gray-600 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="텍스트를 입력하세요" disabled>
+          <select id="fontFamilySelect" class="text-control w-full bg-gray-700 border border-gray-600 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
+            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+            <option value="'Nanum Gothic', sans-serif">Nanum Gothic</option>
+            <option value="'Do Hyeon', sans-serif">Do Hyeon</option>
+            <option value="'Nanum Myeongjo', serif">Nanum Myeongjo</option>
+          </select>
+          <div class="flex items-center space-x-2">
+            <input type="number" id="fontSizeInput" class="text-control w-20 bg-gray-700 border border-gray-600 rounded-lg p-2" value="50" disabled>
+            <button id="boldBtn" class="text-control font-bold w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg" disabled>B</button>
+            <button id="italicBtn" class="text-control italic w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg" disabled>I</button>
+            <div class="color-picker-wrapper" title="텍스트 색상">
+              <div id="fillColorDisplay" class="color-display"></div>
+              <input type="color" id="fillColorPicker" class="text-control" value="#ffffff" disabled>
+            </div>
+          </div>
+
+          <h3 class="font-semibold pt-2 border-t border-gray-600">외곽선 & 그림자</h3>
+          <div class="space-y-4">
+            <div class="flex items-center space-x-2">
+              <label class="flex-shrink-0">두께:</label>
+              <input type="range" id="strokeWidthInput" min="0" max="10" value="0" class="text-control w-full" disabled>
+              <div class="color-picker-wrapper" title="외곽선 색상">
+                <div id="strokeColorDisplay" class="color-display"></div>
+                <input type="color" id="strokeColorPicker" class="text-control" value="#000000" disabled>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <label class="flex-shrink-0">흐림:</label>
+              <input type="range" id="shadowBlurInput" min="0" max="20" value="0" class="text-control w-full" disabled>
+              <div class="color-picker-wrapper" title="그림자 색상">
+                <div id="shadowColorDisplay" class="color-display"></div>
+                <input type="color" id="shadowColorPicker" class="text-control" value="#000000" disabled>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <label class="flex-shrink-0 w-10">X축:</label>
+              <input type="range" id="shadowOffsetXInput" min="-20" max="20" value="0" class="text-control w-full" disabled>
+            </div>
+            <div class="flex items-center space-x-2">
+              <label class="flex-shrink-0 w-10">Y축:</label>
+              <input type="range" id="shadowOffsetYInput" min="-20" max="20" value="0" class="text-control w-full" disabled>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="accordion-item">
-      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition rounded-b-lg">
-        <span>편집</span>
-        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    <!-- 내보내기 아코디언 -->
+    <div id="export-accordion" class="accordion-item border-b border-gray-700">
+      <button class="accordion-header w-full flex justify-between items-center p-3 text-left text-lg font-semibold hover:bg-gray-700 transition">
+        <span>내보내기 & 편집</span>
+        <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
       <div class="accordion-content">
         <div class="p-4 space-y-3">
-          <button id="resetBtn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>
-            선택 이미지 초기화
-          </button>
-          <button id="deleteBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>
-            선택 이미지 삭제
-          </button>
+          <button id="downloadBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">이미지 다운로드</button>
+          <button id="resetBtn" class="general-selection-control w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>선택 초기화</button>
+          <button id="deleteBtn" class="general-selection-control w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>선택 삭제</button>
         </div>
       </div>
     </div>
+
   </aside>
 
   <main class="flex-grow bg-gray-700 flex items-center justify-center p-4 overflow-hidden relative" id="canvas-container">
@@ -165,8 +210,8 @@
   const dropOverlay = document.getElementById('drop-overlay');
 
   // --- 상태 변수 ---
-  let images = [];
-  let selectedImage = null;
+  let objects = [];
+  let selectedObject = null;
   let nextZIndex = 1;
   let isDragging = false;
   let isResizing = false;
@@ -181,114 +226,144 @@
   }
   window.addEventListener('resize', resizeCanvas);
 
-  const createDefaultFilters = () => ({
-    grayscale: 0, sepia: 0, invert: 0, blur: 0,
-    brightness: 100, contrast: 100,
-  });
+  const createDefaultFilters = () => ({ grayscale: 0, sepia: 0, invert: 0, blur: 0, brightness: 100, contrast: 100 });
 
   // --- 렌더링 함수 ---
   function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    images.sort((a, b) => a.zIndex - b.zIndex);
+    objects.sort((a, b) => a.zIndex - b.zIndex);
 
-    images.forEach(imgObj => {
+    objects.forEach(obj => {
       ctx.save();
-      ctx.globalAlpha = imgObj.opacity;
-      const f = imgObj.filters;
-      ctx.filter = `grayscale(${f.grayscale}) sepia(${f.sepia}) invert(${f.invert}) blur(${f.blur}px) brightness(${f.brightness}%) contrast(${f.contrast}%)`;
-      ctx.translate(imgObj.x + imgObj.width / 2, imgObj.y + imgObj.height / 2);
-      ctx.rotate(imgObj.rotation * Math.PI / 180);
-      ctx.scale(imgObj.flip.h, imgObj.flip.v);
-      ctx.drawImage(imgObj.img, -imgObj.width / 2, -imgObj.height / 2, imgObj.width, imgObj.height);
+      ctx.globalAlpha = obj.opacity;
+      ctx.translate(obj.x + obj.width / 2, obj.y + obj.height / 2);
+      ctx.rotate(obj.rotation * Math.PI / 180);
+
+      if (obj.type === 'image') {
+        const f = obj.filters;
+        ctx.filter = `grayscale(${f.grayscale}) sepia(${f.sepia}) invert(${f.invert}) blur(${f.blur}px) brightness(${f.brightness}%) contrast(${f.contrast}%)`;
+        ctx.scale(obj.flip.h, obj.flip.v);
+        ctx.drawImage(obj.img, -obj.width / 2, -obj.height / 2, obj.width, obj.height);
+      } else if (obj.type === 'text') {
+        ctx.font = `${obj.italic ? 'italic' : ''} ${obj.bold ? 'bold' : ''} ${obj.fontSize}px ${obj.fontFamily}`;
+        ctx.fillStyle = obj.fillColor;
+        ctx.strokeStyle = obj.strokeColor;
+        ctx.lineWidth = obj.strokeWidth;
+        ctx.shadowColor = obj.shadowColor;
+        ctx.shadowBlur = obj.shadowBlur;
+        ctx.shadowOffsetX = obj.shadowOffsetX;
+        ctx.shadowOffsetY = obj.shadowOffsetY;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (obj.strokeWidth > 0) ctx.strokeText(obj.text, 0, 0);
+        ctx.fillText(obj.text, 0, 0);
+      }
       ctx.restore();
     });
 
-    if (selectedImage) {
-      drawSelectionHandles(selectedImage);
-    }
+    if (selectedObject) drawSelectionHandles(selectedObject);
   }
 
-  function drawSelectionHandles(imgObj) {
+  function drawSelectionHandles(obj) {
     ctx.save();
-    ctx.translate(imgObj.x + imgObj.width / 2, imgObj.y + imgObj.height / 2);
-    ctx.rotate(imgObj.rotation * Math.PI / 180);
-    const w = imgObj.width;
-    const h = imgObj.height;
+    ctx.translate(obj.x + obj.width / 2, obj.y + obj.height / 2);
+    ctx.rotate(obj.rotation * Math.PI / 180);
+    const w = obj.width;
+    const h = obj.height;
     ctx.strokeStyle = '#007bff';
     ctx.lineWidth = 2;
     ctx.strokeRect(-w / 2, -h / 2, w, h);
     ctx.fillStyle = '#007bff';
     const handleSize = 8;
     const halfHandle = handleSize / 2;
-    ctx.fillRect(-w/2 - halfHandle, -h/2 - halfHandle, handleSize, handleSize);
-    ctx.fillRect(w/2 - halfHandle, -h/2 - halfHandle, handleSize, handleSize);
-    ctx.fillRect(-w/2 - halfHandle, h/2 - halfHandle, handleSize, handleSize);
-    ctx.fillRect(w/2 - halfHandle, h/2 - halfHandle, handleSize, handleSize);
-    ctx.fillRect(-halfHandle, -h/2 - halfHandle, handleSize, handleSize);
-    ctx.fillRect(-halfHandle, h/2 - halfHandle, handleSize, handleSize);
-    ctx.fillRect(-w/2 - halfHandle, -halfHandle, handleSize, handleSize);
-    ctx.fillRect(w/2 - halfHandle, -halfHandle, handleSize, handleSize);
+    ctx.fillRect(-w/2-halfHandle, -h/2-halfHandle, handleSize, handleSize);
+    ctx.fillRect(w/2-halfHandle, -h/2-halfHandle, handleSize, handleSize);
+    ctx.fillRect(-w/2-halfHandle, h/2-halfHandle, handleSize, handleSize);
+    ctx.fillRect(w/2-halfHandle, h/2-halfHandle, handleSize, handleSize);
     ctx.restore();
   }
 
   // --- 컨트롤 UI 업데이트 ---
   function updateControls() {
-    const hasSelection = selectedImage != null;
-    document.querySelectorAll('.layer-btn, .filter-btn, .slider, .transform-btn, #resetBtn, #deleteBtn').forEach(el => {
-      el.disabled = !hasSelection;
-    });
-    if (hasSelection) {
+    const hasSelection = selectedObject != null;
+    const isImage = hasSelection && selectedObject.type === 'image';
+    const isText = hasSelection && selectedObject.type === 'text';
+
+    document.querySelectorAll('.image-control').forEach(el => el.disabled = !isImage);
+    document.querySelectorAll('.text-control').forEach(el => el.disabled = !isText);
+    document.querySelectorAll('.general-selection-control').forEach(el => el.disabled = !hasSelection);
+
+    if (isImage) {
+      const f = selectedObject.filters;
       document.querySelectorAll('.filter-btn').forEach(btn => {
         const filter = btn.dataset.filter;
-        const isActive = (filter === 'blur' && selectedImage.filters.blur > 0) || (filter !== 'blur' && selectedImage.filters[filter] > 0);
+        const isActive = (filter === 'blur' && f.blur > 0) || (filter !== 'blur' && f[filter] > 0);
         btn.classList.toggle('bg-indigo-500', isActive);
         btn.classList.toggle('bg-gray-700', !isActive);
       });
-      document.getElementById('brightness').value = selectedImage.filters.brightness;
-      document.getElementById('brightnessValue').innerText = selectedImage.filters.brightness;
-      document.getElementById('contrast').value = selectedImage.filters.contrast;
-      document.getElementById('contrastValue').innerText = selectedImage.filters.contrast;
-      document.getElementById('opacity').value = selectedImage.opacity * 100;
-      document.getElementById('opacityValue').innerText = Math.round(selectedImage.opacity * 100);
+      document.getElementById('brightness').value = f.brightness;
+      document.getElementById('brightnessValue').innerText = f.brightness;
+      document.getElementById('contrast').value = f.contrast;
+      document.getElementById('contrastValue').innerText = f.contrast;
+      document.getElementById('opacity').value = selectedObject.opacity * 100;
+      document.getElementById('opacityValue').innerText = Math.round(selectedObject.opacity * 100);
+    } else if (isText) {
+      const t = selectedObject;
+      document.getElementById('textInput').value = t.text;
+      document.getElementById('fontFamilySelect').value = t.fontFamily;
+      document.getElementById('fontSizeInput').value = t.fontSize;
+      document.getElementById('boldBtn').classList.toggle('bg-indigo-500', t.bold);
+      document.getElementById('italicBtn').classList.toggle('bg-indigo-500', t.italic);
+      document.getElementById('fillColorPicker').value = t.fillColor;
+      document.getElementById('fillColorDisplay').style.backgroundColor = t.fillColor;
+      document.getElementById('strokeColorPicker').value = t.strokeColor;
+      document.getElementById('strokeColorDisplay').style.backgroundColor = t.strokeColor;
+      document.getElementById('strokeWidthInput').value = t.strokeWidth;
+      document.getElementById('shadowColorPicker').value = t.shadowColor;
+      document.getElementById('shadowColorDisplay').style.backgroundColor = t.shadowColor;
+      document.getElementById('shadowBlurInput').value = t.shadowBlur;
+      document.getElementById('shadowOffsetXInput').value = t.shadowOffsetX;
+      document.getElementById('shadowOffsetYInput').value = t.shadowOffsetY;
     }
   }
 
-  // --- 이미지 선택 및 조작 로직 ---
+  // --- 객체 선택 및 조작 로직 ---
   function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
-  function isPointInImage(x, y, imgObj) {
-    const cx = imgObj.x + imgObj.width / 2;
-    const cy = imgObj.y + imgObj.height / 2;
-    const angle = -imgObj.rotation * Math.PI / 180;
+  function isPointInObject(x, y, obj) {
+    const cx = obj.x + obj.width / 2;
+    const cy = obj.y + obj.height / 2;
+    const angle = -obj.rotation * Math.PI / 180;
     const rotatedX = Math.cos(angle) * (x - cx) - Math.sin(angle) * (y - cy) + cx;
     const rotatedY = Math.sin(angle) * (x - cx) + Math.cos(angle) * (y - cy) + cy;
-    return rotatedX >= imgObj.x && rotatedX <= imgObj.x + imgObj.width &&
-            rotatedY >= imgObj.y && rotatedY <= imgObj.y + imgObj.height;
+    return rotatedX >= obj.x && rotatedX <= obj.x + obj.width &&
+            rotatedY >= obj.y && rotatedY <= obj.y + obj.height;
   }
 
-  function getResizeHandle(x, y, imgObj) {
+  function getResizeHandle(x, y, obj) {
     const handleSize = 12;
-    const left = imgObj.x;
-    const right = imgObj.x + imgObj.width;
-    const top = imgObj.y;
-    const bottom = imgObj.y + imgObj.height;
-    const midX = imgObj.x + imgObj.width / 2;
-    const midY = imgObj.y + imgObj.height / 2;
+    const left = obj.x; const right = obj.x + obj.width;
+    const top = obj.y; const bottom = obj.y + obj.height;
     if (Math.abs(x - left) < handleSize && Math.abs(y - top) < handleSize) return 'tl';
     if (Math.abs(x - right) < handleSize && Math.abs(y - top) < handleSize) return 'tr';
     if (Math.abs(x - left) < handleSize && Math.abs(y - bottom) < handleSize) return 'bl';
     if (Math.abs(x - right) < handleSize && Math.abs(y - bottom) < handleSize) return 'br';
-    if (Math.abs(x - midX) < handleSize && Math.abs(y - top) < handleSize) return 't';
-    if (Math.abs(x - midX) < handleSize && Math.abs(y - bottom) < handleSize) return 'b';
-    if (Math.abs(x - left) < handleSize && Math.abs(y - midY) < handleSize) return 'l';
-    if (Math.abs(x - right) < handleSize && Math.abs(y - midY) < handleSize) return 'r';
     return null;
   }
 
-  // --- 파일 처리 함수 ---
+  function updateTextDimensions(textObj) {
+    ctx.save();
+    ctx.font = `${textObj.italic ? 'italic' : ''} ${textObj.bold ? 'bold' : ''} ${textObj.fontSize}px ${textObj.fontFamily}`;
+    const metrics = ctx.measureText(textObj.text);
+    textObj.width = metrics.width;
+    textObj.height = textObj.fontSize; // Approximation
+    ctx.restore();
+  }
+
+  // --- 파일/텍스트 처리 함수 (수정됨) ---
   function handleFiles(files) {
     Array.from(files).forEach(file => {
       if (!file.type.startsWith('image/')) return;
@@ -296,23 +371,43 @@
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          const newImageObj = {
-            id: Date.now(), img: img,
+          const newObj = {
+            type: 'image', id: Date.now(), img: img,
             x: (canvas.width - img.width * 0.5) / 2, y: (canvas.height - img.height * 0.5) / 2,
             width: img.width * 0.5, height: img.height * 0.5,
             rotation: 0, flip: { h: 1, v: 1 },
             filters: createDefaultFilters(), opacity: 1, zIndex: nextZIndex++,
           };
-          images.push(newImageObj);
-          selectedImage = newImageObj;
+          objects.push(newObj);
+          selectedObject = newObj;
           updateControls();
           drawCanvas();
+          openAccordion('image-accordion'); // 이미지 추가 시 메뉴 열기
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
   }
+
+  document.getElementById('addTextBtn').addEventListener('click', () => {
+    const newText = {
+      type: 'text', id: Date.now(),
+      text: '새 텍스트', x: canvas.width / 2 - 100, y: canvas.height / 2 - 25,
+      width: 200, height: 50, rotation: 0, opacity: 1, zIndex: nextZIndex++,
+      fontSize: 50, fontFamily: "'Noto Sans KR', sans-serif",
+      fillColor: '#ffffff', strokeColor: '#000000', strokeWidth: 0,
+      shadowColor: '#000000', shadowBlur: 0,
+      shadowOffsetX: 0, shadowOffsetY: 0,
+      bold: false, italic: false,
+    };
+    updateTextDimensions(newText);
+    objects.push(newText);
+    selectedObject = newText;
+    updateControls();
+    drawCanvas();
+    openAccordion('text-accordion');
+  });
 
   // --- 이벤트 리스너 ---
   document.getElementById('imageLoader').addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
@@ -324,14 +419,24 @@
   canvas.addEventListener('mousedown', (e) => {
     const { x, y } = getMousePos(e);
     dragStartX = x; dragStartY = y;
-    let clickedImage = null;
-    for (let i = images.length - 1; i >= 0; i--) { if (isPointInImage(x, y, images[i])) { clickedImage = images[i]; break; } }
-    if (clickedImage) {
-      if (clickedImage !== selectedImage) { selectedImage = clickedImage; }
-      selectedImage.zIndex = nextZIndex++;
-      resizeHandle = getResizeHandle(x, y, selectedImage);
+    let clickedObject = null;
+    for (let i = objects.length - 1; i >= 0; i--) { if (isPointInObject(x, y, objects[i])) { clickedObject = objects[i]; break; } }
+
+    if (clickedObject) {
+      if (clickedObject !== selectedObject) {
+        selectedObject = clickedObject;
+        if (selectedObject.type === 'image') openAccordion('image-accordion');
+        else if (selectedObject.type === 'text') openAccordion('text-accordion');
+      }
+      selectedObject.zIndex = nextZIndex++;
+      resizeHandle = getResizeHandle(x, y, selectedObject);
       if (resizeHandle) { isResizing = true; isDragging = false; } else { isResizing = false; isDragging = true; }
-    } else { selectedImage = null; isDragging = false; isResizing = false; }
+    } else {
+      if (selectedObject) openAccordion(null); // Deselect -> close all
+      selectedObject = null;
+      isDragging = false;
+      isResizing = false;
+    }
     updateControls();
     drawCanvas();
   });
@@ -339,22 +444,27 @@
   canvas.addEventListener('mousemove', (e) => {
     const { x, y } = getMousePos(e);
     const dx = x - dragStartX; const dy = y - dragStartY;
-    if (isResizing && selectedImage) {
-      if (resizeHandle.includes('r')) selectedImage.width += dx;
-      if (resizeHandle.includes('l')) { selectedImage.width -= dx; selectedImage.x += dx; }
-      if (resizeHandle.includes('b')) selectedImage.height += dy;
-      if (resizeHandle.includes('t')) { selectedImage.height -= dy; selectedImage.y += dy; }
+    if (isResizing && selectedObject) {
+      const ratio = selectedObject.height / selectedObject.width;
+      if (selectedObject.type === 'image') {
+        selectedObject.width += dx;
+        selectedObject.height = selectedObject.width * ratio;
+      } else if (selectedObject.type === 'text') {
+        selectedObject.fontSize += (dx + dy) / 2;
+        if (selectedObject.fontSize < 1) selectedObject.fontSize = 1;
+        updateTextDimensions(selectedObject);
+      }
       dragStartX = x; dragStartY = y;
       drawCanvas();
-    } else if (isDragging && selectedImage) {
-      selectedImage.x += dx; selectedImage.y += dy;
+    } else if (isDragging && selectedObject) {
+      selectedObject.x += dx; selectedObject.y += dy;
       dragStartX = x; dragStartY = y;
       drawCanvas();
     } else {
-      let onHandle = selectedImage && getResizeHandle(x, y, selectedImage);
-      let onImage = images.some(img => isPointInImage(x, y, img));
+      let onHandle = selectedObject && getResizeHandle(x, y, selectedObject);
+      let onObject = objects.some(obj => isPointInObject(x, y, obj));
       if (onHandle) canvas.style.cursor = 'nwse-resize';
-      else if (onImage) canvas.style.cursor = 'move';
+      else if (onObject) canvas.style.cursor = 'move';
       else canvas.style.cursor = 'default';
     }
   });
@@ -362,42 +472,63 @@
   canvas.addEventListener('mouseup', () => { isDragging = false; isResizing = false; resizeHandle = null; });
   canvas.addEventListener('mouseout', () => { isDragging = false; isResizing = false; resizeHandle = null; });
 
-  document.getElementById('bringForward').addEventListener('click', () => { if (!selectedImage) return; const sorted = [...images].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(img => img.id === selectedImage.id); if (currentIndex < sorted.length - 1) { const nextImg = sorted[currentIndex + 1]; [selectedImage.zIndex, nextImg.zIndex] = [nextImg.zIndex, selectedImage.zIndex]; } drawCanvas(); });
-  document.getElementById('sendBackward').addEventListener('click', () => { if (!selectedImage) return; const sorted = [...images].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(img => img.id === selectedImage.id); if (currentIndex > 0) { const prevImg = sorted[currentIndex - 1]; [selectedImage.zIndex, prevImg.zIndex] = [prevImg.zIndex, selectedImage.zIndex]; } drawCanvas(); });
-  document.getElementById('bringToFront').addEventListener('click', () => { if (selectedImage) selectedImage.zIndex = nextZIndex++; drawCanvas(); });
-  document.getElementById('sendToBack').addEventListener('click', () => { if (selectedImage) { const minZ = Math.min(...images.map(i => i.zIndex)); selectedImage.zIndex = minZ - 1; } drawCanvas(); });
-  document.querySelectorAll('.filter-btn').forEach(button => { button.addEventListener('click', () => { if (!selectedImage) return; const filter = button.dataset.filter; const f = selectedImage.filters; if (filter === 'blur') f.blur = f.blur > 0 ? 0 : 3; else f[filter] = f[filter] > 0 ? 0 : 1; updateControls(); drawCanvas(); }); });
-  document.querySelectorAll('.slider').forEach(slider => { slider.addEventListener('input', (e) => { if (!selectedImage) return; const { id, value } = e.target; if (id === 'opacity') { selectedImage.opacity = value / 100; } else { selectedImage.filters[id] = value; } document.getElementById(`${id}Value`).innerText = value; drawCanvas(); }); });
-  document.getElementById('rotateLeft').addEventListener('click', () => { if (selectedImage) selectedImage.rotation -= 90; drawCanvas(); });
-  document.getElementById('rotateRight').addEventListener('click', () => { if (selectedImage) selectedImage.rotation += 90; drawCanvas(); });
-  document.getElementById('flipHorizontal').addEventListener('click', () => { if (selectedImage) selectedImage.flip.h *= -1; drawCanvas(); });
-  document.getElementById('flipVertical').addEventListener('click', () => { if (selectedImage) selectedImage.flip.v *= -1; drawCanvas(); });
-  document.getElementById('resetBtn').addEventListener('click', () => { if (!selectedImage) return; selectedImage.filters = createDefaultFilters(); selectedImage.rotation = 0; selectedImage.flip = { h: 1, v: 1 }; selectedImage.opacity = 1; updateControls(); drawCanvas(); });
-  document.getElementById('deleteBtn').addEventListener('click', () => { if (!selectedImage) return; images = images.filter(img => img.id !== selectedImage.id); selectedImage = null; updateControls(); drawCanvas(); });
-  document.getElementById('downloadBtn').addEventListener('click', () => { const tempSelected = selectedImage; selectedImage = null; drawCanvas(); const link = document.createElement('a'); link.download = 'canvas-image.png'; link.href = canvas.toDataURL('image/png'); link.click(); selectedImage = tempSelected; drawCanvas(); });
+  // --- 컨트롤 패널 이벤트 리스너 ---
+  document.getElementById('bringForward').addEventListener('click', () => { if (!selectedObject) return; const sorted = [...objects].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(obj => obj.id === selectedObject.id); if (currentIndex < sorted.length - 1) { const nextObj = sorted[currentIndex + 1]; [selectedObject.zIndex, nextObj.zIndex] = [nextObj.zIndex, selectedObject.zIndex]; } drawCanvas(); });
+  document.getElementById('sendBackward').addEventListener('click', () => { if (!selectedObject) return; const sorted = [...objects].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(obj => obj.id === selectedObject.id); if (currentIndex > 0) { const prevObj = sorted[currentIndex - 1]; [selectedObject.zIndex, prevObj.zIndex] = [prevObj.zIndex, selectedObject.zIndex]; } drawCanvas(); });
+  document.getElementById('bringToFront').addEventListener('click', () => { if (selectedObject) selectedObject.zIndex = nextZIndex++; drawCanvas(); });
+  document.getElementById('sendToBack').addEventListener('click', () => { if (selectedObject) { const minZ = Math.min(...objects.map(i => i.zIndex)); selectedObject.zIndex = minZ - 1; } drawCanvas(); });
+  document.querySelectorAll('.filter-btn').forEach(button => { button.addEventListener('click', () => { if (!selectedObject || selectedObject.type !== 'image') return; const filter = button.dataset.filter; const f = selectedObject.filters; if (filter === 'blur') f.blur = f.blur > 0 ? 0 : 3; else f[filter] = f[filter] > 0 ? 0 : 1; updateControls(); drawCanvas(); }); });
+  document.querySelectorAll('.slider').forEach(slider => { slider.addEventListener('input', (e) => { if (!selectedObject) return; const { id, value } = e.target; if (id === 'opacity') { selectedObject.opacity = value / 100; } else if (selectedObject.type === 'image') { selectedObject.filters[id] = value; } document.getElementById(`${id}Value`).innerText = value; drawCanvas(); }); });
+  document.getElementById('rotateLeft').addEventListener('click', () => { if (selectedObject) selectedObject.rotation -= 90; drawCanvas(); });
+  document.getElementById('rotateRight').addEventListener('click', () => { if (selectedObject) selectedObject.rotation += 90; drawCanvas(); });
+  document.getElementById('flipHorizontal').addEventListener('click', () => { if (selectedObject && selectedObject.type === 'image') selectedObject.flip.h *= -1; drawCanvas(); });
+  document.getElementById('flipVertical').addEventListener('click', () => { if (selectedObject && selectedObject.type === 'image') selectedObject.flip.v *= -1; drawCanvas(); });
+  document.getElementById('resetBtn').addEventListener('click', () => { if (!selectedObject) return; if (selectedObject.type === 'image') { selectedObject.filters = createDefaultFilters(); selectedObject.opacity = 1; selectedObject.flip = {h:1, v:1}; } else if (selectedObject.type === 'text') { /* 텍스트 초기화 로직 */ } selectedObject.rotation = 0; updateControls(); drawCanvas(); });
+  document.getElementById('deleteBtn').addEventListener('click', () => { if (!selectedObject) return; objects = objects.filter(obj => obj.id !== selectedObject.id); selectedObject = null; openAccordion(null); updateControls(); drawCanvas(); });
+  document.getElementById('downloadBtn').addEventListener('click', () => { const tempSelected = selectedObject; selectedObject = null; drawCanvas(); const link = document.createElement('a'); link.download = 'canvas-image.png'; link.href = canvas.toDataURL('image/png'); link.click(); selectedObject = tempSelected; drawCanvas(); });
 
-  // --- 아코디언 메뉴 로직 추가 ---
-  const accordionHeaders = document.querySelectorAll('.accordion-header');
-  accordionHeaders.forEach(header => {
-    header.addEventListener('click', () => {
-      const content = header.nextElementSibling;
-      const icon = header.querySelector('.accordion-icon');
+  // --- 텍스트 컨트롤 이벤트 리스너 ---
+  function updateSelectedText(props) { if (selectedObject && selectedObject.type === 'text') { Object.assign(selectedObject, props); updateTextDimensions(selectedObject); updateControls(); drawCanvas(); } }
+  document.getElementById('textInput').addEventListener('input', (e) => updateSelectedText({ text: e.target.value }));
+  document.getElementById('fontFamilySelect').addEventListener('change', (e) => updateSelectedText({ fontFamily: e.target.value }));
+  document.getElementById('fontSizeInput').addEventListener('input', (e) => updateSelectedText({ fontSize: parseInt(e.target.value, 10) }));
+  document.getElementById('boldBtn').addEventListener('click', () => updateSelectedText({ bold: !selectedObject.bold }));
+  document.getElementById('italicBtn').addEventListener('click', () => updateSelectedText({ italic: !selectedObject.italic }));
+  document.getElementById('fillColorPicker').addEventListener('input', (e) => updateSelectedText({ fillColor: e.target.value }));
+  document.getElementById('strokeColorPicker').addEventListener('input', (e) => updateSelectedText({ strokeColor: e.target.value }));
+  document.getElementById('strokeWidthInput').addEventListener('input', (e) => updateSelectedText({ strokeWidth: parseInt(e.target.value, 10) }));
+  document.getElementById('shadowColorPicker').addEventListener('input', (e) => updateSelectedText({ shadowColor: e.target.value }));
+  document.getElementById('shadowBlurInput').addEventListener('input', (e) => updateSelectedText({ shadowBlur: parseInt(e.target.value, 10) }));
+  document.getElementById('shadowOffsetXInput').addEventListener('input', (e) => updateSelectedText({ shadowOffsetX: parseInt(e.target.value, 10) }));
+  document.getElementById('shadowOffsetYInput').addEventListener('input', (e) => updateSelectedText({ shadowOffsetY: parseInt(e.target.value, 10) }));
 
-      // 다른 열려있는 메뉴 닫기
-      accordionHeaders.forEach(otherHeader => {
-        if (otherHeader !== header) {
-          otherHeader.nextElementSibling.style.maxHeight = null;
-          otherHeader.querySelector('.accordion-icon').classList.remove('rotate-180');
+  // --- 아코디언 메뉴 로직 ---
+  function openAccordion(accordionId) {
+    document.querySelectorAll('.accordion-item').forEach(item => {
+      const content = item.querySelector('.accordion-content');
+      const icon = item.querySelector('.accordion-icon');
+      if (item.id === accordionId) {
+        if (!content.style.maxHeight) {
+          content.style.maxHeight = content.scrollHeight + "px";
+          icon.classList.add('rotate-180');
         }
-      });
-
-      // 현재 메뉴 토글
-      if (content.style.maxHeight) {
-        content.style.maxHeight = null;
-        icon.classList.remove('rotate-180');
       } else {
-        content.style.maxHeight = content.scrollHeight + "px";
-        icon.classList.add('rotate-180');
+        if (content.style.maxHeight) {
+          content.style.maxHeight = null;
+          icon.classList.remove('rotate-180');
+        }
+      }
+    });
+  }
+
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const parentItem = header.closest('.accordion-item');
+      const content = parentItem.querySelector('.accordion-content');
+      if (content.style.maxHeight) {
+        openAccordion(null);
+      } else {
+        openAccordion(parentItem.id);
       }
     });
   });
