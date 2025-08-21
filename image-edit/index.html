@@ -75,44 +75,57 @@
           <label for="imageLoader" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer transition">이미지 추가</label>
           <input type="file" id="imageLoader" class="hidden" accept="image/*" multiple/>
 
-          <h3 class="font-semibold pt-2 border-t border-gray-600">레이어</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <button id="bringForward" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>앞으로</button>
-            <button id="sendBackward" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>뒤로</button>
-            <button id="bringToFront" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 앞으로</button>
-            <button id="sendToBack" class="image-control general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 뒤로</button>
-          </div>
-
-          <h3 class="font-semibold pt-2 border-t border-gray-600">필터</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="grayscale" disabled>흑백</button>
-            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="sepia" disabled>세피아</button>
-            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="invert" disabled>반전</button>
-            <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="blur" disabled>블러</button>
-          </div>
-
-          <h3 class="font-semibold pt-2 border-t border-gray-600">조정</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="mb-2 flex justify-between">밝기 <span id="brightnessValue">100</span>%</label>
-              <input type="range" id="brightness" class="image-control slider" min="0" max="200" value="100" disabled>
-            </div>
-            <div>
-              <label class="mb-2 flex justify-between">대비 <span id="contrastValue">100</span>%</label>
-              <input type="range" id="contrast" class="image-control slider" min="0" max="200" value="100" disabled>
-            </div>
-            <div>
-              <label class="mb-2 flex justify-between">투명도 <span id="opacityValue">100</span>%</label>
-              <input type="range" id="opacity" class="general-selection-control slider" min="0" max="100" value="100" disabled>
+          <div id="crop-controls" class="hidden space-y-2">
+            <h3 class="font-semibold pt-2 border-t border-gray-600">자르기</h3>
+            <div class="flex gap-2">
+              <button id="confirmCropBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">확인</button>
+              <button id="cancelCropBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">취소</button>
             </div>
           </div>
 
-          <h3 class="font-semibold pt-2 border-t border-gray-600">변형</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <button id="rotateLeft" class="general-selection-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌회전</button>
-            <button id="rotateRight" class="general-selection-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>우회전</button>
-            <button id="flipHorizontal" class="image-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌우 반전</button>
-            <button id="flipVertical" class="image-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>상하 반전</button>
+          <div id="main-image-controls">
+            <h3 class="font-semibold pt-2 border-t border-gray-600">편집</h3>
+            <button id="cropBtn" class="image-control w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition mb-2" disabled>자르기</button>
+
+            <h3 class="font-semibold pt-2 border-t border-gray-600">레이어</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button id="bringForward" class="general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>앞으로</button>
+              <button id="sendBackward" class="general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>뒤로</button>
+              <button id="bringToFront" class="general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 앞으로</button>
+              <button id="sendToBack" class="general-selection-control layer-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>맨 뒤로</button>
+            </div>
+
+            <h3 class="font-semibold pt-2 border-t border-gray-600">필터</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="grayscale" disabled>흑백</button>
+              <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="sepia" disabled>세피아</button>
+              <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="invert" disabled>반전</button>
+              <button class="image-control filter-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" data-filter="blur" disabled>블러</button>
+            </div>
+
+            <h3 class="font-semibold pt-2 border-t border-gray-600">조정</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="mb-2 flex justify-between">밝기 <span id="brightnessValue">100</span>%</label>
+                <input type="range" id="brightness" class="image-control slider" min="0" max="200" value="100" disabled>
+              </div>
+              <div>
+                <label class="mb-2 flex justify-between">대비 <span id="contrastValue">100</span>%</label>
+                <input type="range" id="contrast" class="image-control slider" min="0" max="200" value="100" disabled>
+              </div>
+              <div>
+                <label class="mb-2 flex justify-between">투명도 <span id="opacityValue">100</span>%</label>
+                <input type="range" id="opacity" class="general-selection-control slider" min="0" max="100" value="100" disabled>
+              </div>
+            </div>
+
+            <h3 class="font-semibold pt-2 border-t border-gray-600">변형</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button id="rotateLeft" class="general-selection-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌회전</button>
+              <button id="rotateRight" class="general-selection-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>우회전</button>
+              <button id="flipHorizontal" class="image-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>좌우 반전</button>
+              <button id="flipVertical" class="image-control transform-btn bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition" disabled>상하 반전</button>
+            </div>
           </div>
         </div>
       </div>
@@ -217,6 +230,10 @@
   let isResizing = false;
   let resizeHandle = null;
   let dragStartX, dragStartY;
+  // 자르기 상태 변수
+  let isCropping = false;
+  let cropBox = {};
+  let cropDragHandle = null;
 
   // --- 유틸리티 함수 ---
   function resizeCanvas() {
@@ -261,7 +278,8 @@
       ctx.restore();
     });
 
-    if (selectedObject) drawSelectionHandles(selectedObject);
+    if (selectedObject && !isCropping) drawSelectionHandles(selectedObject);
+    if (isCropping) drawCropUI();
   }
 
   function drawSelectionHandles(obj) {
@@ -283,15 +301,33 @@
     ctx.restore();
   }
 
+  function drawCropUI() {
+    if (!selectedObject) return;
+    ctx.save();
+    // 자르기 영역 바깥은 그대로 두고,
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // 반투명 흰색
+    ctx.fillRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+
+    // 자르기 영역 테두리를 점선으로 그립니다.
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+    ctx.restore();
+  }
+
   // --- 컨트롤 UI 업데이트 ---
   function updateControls() {
     const hasSelection = selectedObject != null;
     const isImage = hasSelection && selectedObject.type === 'image';
     const isText = hasSelection && selectedObject.type === 'text';
 
-    document.querySelectorAll('.image-control').forEach(el => el.disabled = !isImage);
-    document.querySelectorAll('.text-control').forEach(el => el.disabled = !isText);
-    document.querySelectorAll('.general-selection-control').forEach(el => el.disabled = !hasSelection);
+    document.getElementById('crop-controls').style.display = isCropping ? 'block' : 'none';
+    document.getElementById('main-image-controls').style.display = isCropping ? 'none' : 'block';
+
+    document.querySelectorAll('.image-control').forEach(el => el.disabled = !isImage || isCropping);
+    document.querySelectorAll('.text-control').forEach(el => el.disabled = !isText || isCropping);
+    document.querySelectorAll('.general-selection-control').forEach(el => el.disabled = !hasSelection || isCropping);
 
     if (isImage) {
       const f = selectedObject.filters;
@@ -354,6 +390,18 @@
     return null;
   }
 
+  function getCropHandle(x, y) {
+    const handleSize = 12;
+    const left = cropBox.x; const right = cropBox.x + cropBox.width;
+    const top = cropBox.y; const bottom = cropBox.y + cropBox.height;
+    if (Math.abs(x - left) < handleSize && Math.abs(y - top) < handleSize) return 'tl';
+    if (Math.abs(x - right) < handleSize && Math.abs(y - top) < handleSize) return 'tr';
+    if (Math.abs(x - left) < handleSize && Math.abs(y - bottom) < handleSize) return 'bl';
+    if (Math.abs(x - right) < handleSize && Math.abs(y - bottom) < handleSize) return 'br';
+    if (x > left && x < right && y > top && y < bottom) return 'move';
+    return null;
+  }
+
   function updateTextDimensions(textObj) {
     ctx.save();
     ctx.font = `${textObj.italic ? 'italic' : ''} ${textObj.bold ? 'bold' : ''} ${textObj.fontSize}px ${textObj.fontFamily}`;
@@ -380,8 +428,7 @@
           };
           objects.push(newObj);
           selectedObject = newObj;
-          updateControls();
-          drawCanvas();
+          updateControls(); drawCanvas();
           openAccordion('image-accordion');
         };
         img.src = event.target.result;
@@ -404,8 +451,7 @@
     updateTextDimensions(newText);
     objects.push(newText);
     selectedObject = newText;
-    updateControls();
-    drawCanvas();
+    updateControls(); drawCanvas();
     openAccordion('text-accordion');
   });
 
@@ -415,18 +461,17 @@
   canvasContainer.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
   canvasContainer.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget === null || !canvasContainer.contains(e.relatedTarget)) { dropOverlay.classList.add('hidden'); } });
   canvasContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); dropOverlay.classList.add('hidden'); handleFiles(e.dataTransfer.files); });
-
-  // 클립보드 붙여넣기 이벤트 추가
-  window.addEventListener('paste', (e) => {
-    if (e.clipboardData && e.clipboardData.files.length > 0) {
-      handleFiles(e.clipboardData.files);
-      e.preventDefault();
-    }
-  });
+  window.addEventListener('paste', (e) => { if (e.clipboardData && e.clipboardData.files.length > 0) { handleFiles(e.clipboardData.files); e.preventDefault(); } });
 
   canvas.addEventListener('mousedown', (e) => {
     const { x, y } = getMousePos(e);
     dragStartX = x; dragStartY = y;
+
+    if (isCropping) {
+      cropDragHandle = getCropHandle(x, y);
+      return;
+    }
+
     let clickedObject = null;
     for (let i = objects.length - 1; i >= 0; i--) { if (isPointInObject(x, y, objects[i])) { clickedObject = objects[i]; break; } }
 
@@ -452,6 +497,28 @@
   canvas.addEventListener('mousemove', (e) => {
     const { x, y } = getMousePos(e);
     const dx = x - dragStartX; const dy = y - dragStartY;
+
+    if (isCropping && cropDragHandle) {
+      const imgBounds = selectedObject;
+      if (cropDragHandle === 'move') {
+        cropBox.x += dx; cropBox.y += dy;
+      } else {
+        if(cropDragHandle.includes('l')) { cropBox.width -= dx; cropBox.x += dx; }
+        if(cropDragHandle.includes('r')) { cropBox.width += dx; }
+        if(cropDragHandle.includes('t')) { cropBox.height -= dy; cropBox.y += dy; }
+        if(cropDragHandle.includes('b')) { cropBox.height += dy; }
+      }
+      // Boundary checks
+      if (cropBox.x < imgBounds.x) { cropBox.width += cropBox.x - imgBounds.x; cropBox.x = imgBounds.x; }
+      if (cropBox.y < imgBounds.y) { cropBox.height += cropBox.y - imgBounds.y; cropBox.y = imgBounds.y; }
+      if (cropBox.x + cropBox.width > imgBounds.x + imgBounds.width) { cropBox.width = imgBounds.x + imgBounds.width - cropBox.x; }
+      if (cropBox.y + cropBox.height > imgBounds.y + imgBounds.height) { cropBox.height = imgBounds.y + imgBounds.height - cropBox.y; }
+
+      dragStartX = x; dragStartY = y;
+      drawCanvas();
+      return;
+    }
+
     if (isResizing && selectedObject) {
       const ratio = selectedObject.height / selectedObject.width;
       if (selectedObject.type === 'image') {
@@ -477,10 +544,54 @@
     }
   });
 
-  canvas.addEventListener('mouseup', () => { isDragging = false; isResizing = false; resizeHandle = null; });
-  canvas.addEventListener('mouseout', () => { isDragging = false; isResizing = false; resizeHandle = null; });
+  canvas.addEventListener('mouseup', () => { isDragging = false; isResizing = false; resizeHandle = null; cropDragHandle = null; });
+  canvas.addEventListener('mouseout', () => { isDragging = false; isResizing = false; resizeHandle = null; cropDragHandle = null; });
 
   // --- 컨트롤 패널 이벤트 리스너 ---
+  document.getElementById('cropBtn').addEventListener('click', () => {
+    if (selectedObject && selectedObject.type === 'image') {
+      isCropping = true;
+      cropBox = { x: selectedObject.x, y: selectedObject.y, width: selectedObject.width, height: selectedObject.height };
+      updateControls();
+      drawCanvas();
+    }
+  });
+  document.getElementById('cancelCropBtn').addEventListener('click', () => {
+    isCropping = false;
+    cropBox = {};
+    updateControls();
+    drawCanvas();
+  });
+  document.getElementById('confirmCropBtn').addEventListener('click', () => {
+    if (!isCropping || !selectedObject) return;
+
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d');
+
+    const sx = (cropBox.x - selectedObject.x) / selectedObject.width * selectedObject.img.naturalWidth;
+    const sy = (cropBox.y - selectedObject.y) / selectedObject.height * selectedObject.img.naturalHeight;
+    const sWidth = cropBox.width / selectedObject.width * selectedObject.img.naturalWidth;
+    const sHeight = cropBox.height / selectedObject.height * selectedObject.img.naturalHeight;
+
+    offscreenCanvas.width = sWidth;
+    offscreenCanvas.height = sHeight;
+
+    offscreenCtx.drawImage(selectedObject.img, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
+    const newImg = new Image();
+    newImg.onload = () => {
+      selectedObject.img = newImg;
+      selectedObject.x = cropBox.x;
+      selectedObject.y = cropBox.y;
+      selectedObject.width = cropBox.width;
+      selectedObject.height = cropBox.height;
+      isCropping = false;
+      updateControls();
+      drawCanvas();
+    };
+    newImg.src = offscreenCanvas.toDataURL();
+  });
+
   document.getElementById('bringForward').addEventListener('click', () => { if (!selectedObject) return; const sorted = [...objects].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(obj => obj.id === selectedObject.id); if (currentIndex < sorted.length - 1) { const nextObj = sorted[currentIndex + 1]; [selectedObject.zIndex, nextObj.zIndex] = [nextObj.zIndex, selectedObject.zIndex]; } drawCanvas(); });
   document.getElementById('sendBackward').addEventListener('click', () => { if (!selectedObject) return; const sorted = [...objects].sort((a,b) => a.zIndex - b.zIndex); const currentIndex = sorted.findIndex(obj => obj.id === selectedObject.id); if (currentIndex > 0) { const prevObj = sorted[currentIndex - 1]; [selectedObject.zIndex, prevObj.zIndex] = [prevObj.zIndex, selectedObject.zIndex]; } drawCanvas(); });
   document.getElementById('bringToFront').addEventListener('click', () => { if (selectedObject) selectedObject.zIndex = nextZIndex++; drawCanvas(); });
