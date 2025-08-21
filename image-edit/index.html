@@ -363,7 +363,7 @@
     ctx.restore();
   }
 
-  // --- 파일/텍스트 처리 함수 (수정됨) ---
+  // --- 파일/텍스트 처리 함수 ---
   function handleFiles(files) {
     Array.from(files).forEach(file => {
       if (!file.type.startsWith('image/')) return;
@@ -382,7 +382,7 @@
           selectedObject = newObj;
           updateControls();
           drawCanvas();
-          openAccordion('image-accordion'); // 이미지 추가 시 메뉴 열기
+          openAccordion('image-accordion');
         };
         img.src = event.target.result;
       };
@@ -416,6 +416,14 @@
   canvasContainer.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); if (e.relatedTarget === null || !canvasContainer.contains(e.relatedTarget)) { dropOverlay.classList.add('hidden'); } });
   canvasContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); dropOverlay.classList.add('hidden'); handleFiles(e.dataTransfer.files); });
 
+  // 클립보드 붙여넣기 이벤트 추가
+  window.addEventListener('paste', (e) => {
+    if (e.clipboardData && e.clipboardData.files.length > 0) {
+      handleFiles(e.clipboardData.files);
+      e.preventDefault();
+    }
+  });
+
   canvas.addEventListener('mousedown', (e) => {
     const { x, y } = getMousePos(e);
     dragStartX = x; dragStartY = y;
@@ -432,7 +440,7 @@
       resizeHandle = getResizeHandle(x, y, selectedObject);
       if (resizeHandle) { isResizing = true; isDragging = false; } else { isResizing = false; isDragging = true; }
     } else {
-      if (selectedObject) openAccordion(null); // Deselect -> close all
+      if (selectedObject) openAccordion(null);
       selectedObject = null;
       isDragging = false;
       isResizing = false;
